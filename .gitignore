@@ -1,0 +1,28 @@
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Next.js & Node
+node_modules/
+.next/
+out/
+build/
+dist/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Clarinet
+stacks-contracts/.cache/
+stacks-contracts/requirements/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific Ignored Folders
+plan dump/
+unity dump/
+brand elements/

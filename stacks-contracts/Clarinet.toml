@@ -1,0 +1,18 @@
+[project]
+name = "ham-maze-stacks"
+authors = []
+description = ""
+telemetry = false
+requirements = []
+cache_dir = ".\.cache"
+
+[contracts.ham-maze]
+path = "contracts/ham-maze.clar"
+depends_on = []
+
+[repl]
+costs_version = 2
+parser_version = 2
+
+[repl.analysis]
+passes = ["check_checker"]
