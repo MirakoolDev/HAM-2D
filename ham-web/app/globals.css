@@ -1,0 +1,431 @@
+/* ─── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0f0f0f;
+  --bg-panel:   #0f0f0f;
+  --bg-dark:    #0f0f0f;
+  --wall:       #333333;
+  --wall-light: #555555;
+  --path:       #ffffff;
+  --goal:       #ffffff;
+  --accent:     #ffffff;
+  --text:       #e2e2e2;
+  --text-muted: #888888;
+  --border:     #222222;
+  --gold:       #ffffff;
+  --silver:     #cccccc;
+  --bronze:     #999999;
+  --danger:     #ff0000;
+  --success:    #ffffff;
+
+  --font-head:  'Inter', sans-serif;
+  --font-mono:  'Inter', sans-serif;
+
+  --radius-sm:  0px;
+  --radius-md:  0px;
+  --radius-lg:  0px;
+  --shadow:     none;
+  --shadow-lg:  none;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-head);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Layout ────────────────────────────────────────────────────── */
+.app-shell {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: var(--bg-dark);
+  border-bottom: 2px solid var(--wall);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-logo {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  text-transform: none;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 0;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    height: auto;
+    overflow: auto;
+  }
+}
+
+/* ─── Panels ────────────────────────────────────────────────────── */
+.panel {
+  background: var(--bg-panel);
+  border-right: 2px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 16px;
+}
+
+.panel:last-child { border-right: none; border-left: 2px solid var(--border); }
+
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Game Center ───────────────────────────────────────────────── */
+.game-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 16px;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ─── Canvas wrapper ────────────────────────────────────────────── */
+.canvas-wrap {
+  position: relative;
+  border: 3px solid var(--wall);
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.canvas-wrap.state-failed {
+  animation: failFlash 0.35s ease;
+}
+
+@keyframes failFlash {
+  0%   { box-shadow: 0 0 0 0 var(--danger), var(--shadow-lg); }
+  40%  { box-shadow: 0 0 0 12px var(--danger), var(--shadow-lg); }
+  100% { box-shadow: var(--shadow-lg); }
+}
+
+.canvas-wrap.state-success {
+  box-shadow: 0 0 0 4px var(--success), var(--shadow-lg);
+}
+
+/* ─── Timer ─────────────────────────────────────────────────────── */
+.timer-display {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  min-width: 160px;
+  text-align: center;
+}
+
+.timer-display.running { color: var(--path); }
+.timer-display.done    { color: var(--success); }
+
+/* ─── Status bar ────────────────────────────────────────────────── */
+.status-bar {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ─── Leaderboard ───────────────────────────────────────────────── */
+.lb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.lb-row:hover { background: #111111; }
+.lb-row.me    { background: rgba(255,255,255,0.1); }
+
+.lb-rank {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.lb-rank.gold   { color: var(--gold); }
+.lb-rank.silver { color: var(--silver); }
+.lb-rank.bronze { color: var(--bronze); }
+
+.lb-addr {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--path);
+  white-space: nowrap;
+}
+
+.lb-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 10px 0;
+}
+
+/* ─── Pot Panel ─────────────────────────────────────────────────── */
+.pot-amount {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 8px 0 4px;
+}
+
+.pot-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.countdown {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--path);
+  margin: 6px 0;
+}
+
+.prize-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.prize-row:last-child { border-bottom: none; }
+.prize-pct { font-family: var(--font-mono); font-weight: 700; color: var(--path); }
+
+/* ─── Buttons ───────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  border-radius: 0px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.1s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+.btn-primary:hover { background: #e2e2e2; border-color: #e2e2e2; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-secondary:hover { border-color: var(--text); color: #ffffff; }
+
+.btn-dark {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.btn-dark:hover { background: #2d2d4e; }
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.btn-full { width: 100%; }
+
+/* ─── Result Card Modal ─────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+.result-card {
+  background: var(--bg);
+  border: 3px solid var(--wall);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+.result-title {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.result-time {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--path);
+  line-height: 1;
+}
+
+.result-meta {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.result-meta strong { color: var(--text); }
+
+.result-preview {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mint-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--success);
+  animation: fadeIn 0.3s ease;
+}
+
+/* ─── Live pulse animation ──────────────────────────────────────── */
+@keyframes pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 1.5s infinite;
+}
+
+/* ─── Wallet button ─────────────────────────────────────────────── */
+.wallet-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+}
+.wallet-btn:hover { background: #e2e2e2; }
+.wallet-btn.connected { background: transparent; border: 2px solid var(--border); color: var(--text); font-size: 11px; }
+
+/* ─── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ─── Mobile ────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .panel { border-right: none; border-bottom: 2px solid var(--border); }
+  .panel:last-child { border-left: none; border-top: 2px solid var(--border); border-bottom: none; }
+  .timer-display { font-size: 28px; }
+  .result-time { font-size: 40px; }
+}
