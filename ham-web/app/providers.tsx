@@ -17,6 +17,9 @@ const rkTheme = darkTheme({
   fontStack: 'system',
 });
 
+import { Connect } from '@stacks/connect-react';
+import { userSession } from '@/lib/blockchain/stacks-provider';
+
 export function Providers({ children }: { children: ReactNode }) {
   // useState ensures a stable QueryClient per session (matches pin repo pattern)
   const [queryClient] = useState(
@@ -35,9 +38,17 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={rkTheme}>
-          <GameProvider>
-            {children}
-          </GameProvider>
+          <Connect authOptions={{
+            appDetails: {
+              name: 'HAM Maze',
+              icon: typeof window !== 'undefined' ? window.location.origin + '/favicon.ico' : '',
+            },
+            userSession,
+          }}>
+            <GameProvider>
+              {children}
+            </GameProvider>
+          </Connect>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

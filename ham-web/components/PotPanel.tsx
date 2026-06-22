@@ -1,68 +1,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useGameChain } from '@/components/GameProvider';
+import { useGameChain } from './GameProvider';
 import { getTodaySeed } from '@/lib/maze';
-
-const PRIZE_SHARE = 0.75;
-const PODIUM = [30, 20, 15];
-const TAIL_TOTAL = 35;
-const TOTAL_WINNERS = 10;
-
-function getCountdown(): string {
-  const now = new Date();
-  const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const diff = midnight.getTime() - now.getTime();
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-}
 
 interface PotPanelProps {
   isConnected: boolean;
-  refreshTrigger?: number;
+  refreshTrigger: number;
 }
 
-export default function PotPanel({ isConnected, refreshTrigger = 0 }: PotPanelProps) {
-  const [potStx, setPotStx] = useState(0);
-  const [countdown, setCountdown] = useState(getCountdown());
-  const mazeId = getTodaySeed();
+export default function PotPanel({ isConnected, refreshTrigger }: PotPanelProps) {
   const { provider } = useGameChain();
+  const [prizePool, setPrizePool] = useState<string>("0");
 
   useEffect(() => {
-    provider.getPrizePool(mazeId).then(pool => {
-      // The pool is returned in micro-STX as a string
-      const stxValue = Number(pool) / 1_000_000;
-      setPotStx(stxValue);
-    }).catch(console.error);
-  }, [mazeId, refreshTrigger, provider]);
-
-  useEffect(() => {
-    const t = setInterval(() => setCountdown(getCountdown()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Prize breakdown removed per PND minimalist UI request
+    async function fetchPot() {
+      try {
+        const pool = await provider.getPrizePool(getTodaySeed());
+        setPrizePool(pool);
+      } catch (err) {
+        console.error("Failed to fetch prize pool", err);
+      }
+    }
+    fetchPot();
+  }, [provider, refreshTrigger]);
 
   return (
-    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-      <div>
-        <div className="panel-title">Today's Pot 💰</div>
-        <div className="pot-amount">{potStx.toFixed(4)} STX</div>
-        <div className="pot-label">Total mints × 1 STX</div>
+    <div className="panel side-panel pot-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="panel-header">
+        <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: 14 }}>Prize Pool</h2>
       </div>
-
-      <hr style={{ border: 'none', borderTop: '1px solid var(--border)' }} />
-
-      <div>
-        <div className="panel-title">Settlement in</div>
-        <div className="countdown">{countdown}</div>
+      <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: 48, fontWeight: 'bold', color: 'var(--accent)' }}>
+          {prizePool}
+        </div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>
+          Microstacks (uSTX)
+        </div>
       </div>
-
-
-
     </div>
   );
 }

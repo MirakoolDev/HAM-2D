@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { upsertRun } from '@/lib/supabase';
+import { adminUpsertRun } from '@/lib/supabase';
 
 /**
  * POST /api/ingest
@@ -11,19 +11,22 @@ import { upsertRun } from '@/lib/supabase';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { tokenId, mazeId, address, timeMs, txHash } = body;
+    const { tokenId, mazeId, network, address, timeMs, txHash, attempts, pathSvg } = body;
 
-    if (!tokenId || !mazeId || !address || !timeMs) {
+    if (!tokenId || !mazeId || !network || !address || !timeMs) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    await upsertRun({
+    await adminUpsertRun({
       token_id: Number(tokenId),
       maze_id:  Number(mazeId),
+      network:  String(network),
       address:  String(address).toLowerCase(),
       time_ms:  Number(timeMs),
       minted_at: new Date().toISOString(),
       tx_hash:  String(txHash ?? ''),
+      attempts: attempts ? Number(attempts) : undefined,
+      path_svg: pathSvg ? String(pathSvg) : undefined,
     });
 
     return NextResponse.json({ ok: true });

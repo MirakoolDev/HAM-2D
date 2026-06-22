@@ -22,7 +22,7 @@ interface RunResult {
 }
 
 export default function GameShell() {
-  const { address, connectWallet, disconnectWallet, provider } = useGameChain();
+  const { address, networkId, connectWallet, disconnectWallet, provider } = useGameChain();
   const isConnected = !!address;
 
   const [runResult, setRunResult] = useState<RunResult | null>(null);
@@ -63,6 +63,7 @@ export default function GameShell() {
       await upsertRun({
         token_id: Date.now(), // This will be real token_id from indexer later
         maze_id: mazeId,
+        network: networkId,
         address,
         time_ms: runResult.timeMs,
         minted_at: new Date().toISOString(),
@@ -118,7 +119,7 @@ export default function GameShell() {
 
       {/* Main 3-column grid */}
       <main className="main-grid">
-        <Leaderboard connectedAddress={address} refreshTrigger={lbRefresh} />
+        <Leaderboard connectedAddress={address || undefined} refreshTrigger={lbRefresh} />
 
         <div className="game-center">
           <MazeCanvas 

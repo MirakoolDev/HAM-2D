@@ -33,17 +33,20 @@ function prizeShare(rank: number, totalWinners: number): string {
   return '—';
 }
 
+import { useGameChain } from '@/components/GameProvider';
+
 export default function Leaderboard({ connectedAddress, refreshTrigger = 0 }: LeaderboardProps) {
   const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
   const [pulsing, setPulsing] = useState(false);
   const totalWinners = 10;
   const mazeId = getTodaySeed();
+  const { networkId } = useGameChain();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchLeaderboard(mazeId).then((data) => {
+    fetchLeaderboard(mazeId, networkId).then((data) => {
       if (!cancelled) {
         setRuns(data);
         setLoading(false);

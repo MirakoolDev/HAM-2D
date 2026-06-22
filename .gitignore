@@ -26,3 +26,12 @@ Thumbs.db
 plan dump/
 unity dump/
 brand elements/
+
+# Typescript & Next.js extras
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+*.pem
+
+# Local scratchpad scripts
+ham-web/scripts/

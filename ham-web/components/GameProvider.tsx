@@ -7,18 +7,28 @@ import { EvmGameService } from '../lib/blockchain/evm-provider';
 
 // Configuration: we are prioritizing Stacks right now
 const ACTIVE_CHAIN = process.env.NEXT_PUBLIC_ACTIVE_CHAIN || "STACKS"; // "STACKS" or "EVM"
+const NETWORK_ENV = process.env.NEXT_PUBLIC_NETWORK_ENV || "testnet"; // "testnet" or "mainnet"
 
 interface GameContextProps {
   provider: IBlockchainProvider;
   address: string | null;
+  networkId: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
 
+import { useConnect } from '@stacks/connect-react';
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
+  const { authenticate } = useConnect();
+
+  // Determine the network string for Supabase leaderboard partitioning
+  const networkId = ACTIVE_CHAIN === "STACKS" 
+    ? `stacks-${NETWORK_ENV}` 
+    : (process.env.NEXT_PUBLIC_EVM_NETWORK || "base-sepolia");
 
   // Initialize the correct provider based on configuration
   const provider = useMemo(() => {
@@ -31,15 +41,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const addr = provider.getAddress();
       setAddress(addr);
     };
-    // Note: Stacks userSession might take a tick to load, 
-    // so we can call this after a small delay or trust local state
     checkAddress();
   }, [provider]);
 
   const connectWallet = async () => {
     try {
-      await provider.connectWallet();
-      setAddress(provider.getAddress());
+      if (ACTIVE_CHAIN === "STACKS") {
+        authenticate({
+          onFinish: () => {
+            setAddress(provider.getAddress());
+          },
+        });
+      } else {
+        await provider.connectWallet();
+        setAddress(provider.getAddress());
+      }
     } catch (error) {
       console.error("Wallet connection failed:", error);
     }
@@ -51,7 +67,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <GameContext.Provider value={{ provider, address, connectWallet, disconnectWallet }}>
+    <GameContext.Provider value={{ provider, address, networkId, connectWallet, disconnectWallet }}>
       {children}
     </GameContext.Provider>
   );

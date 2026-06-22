@@ -17,20 +17,24 @@ function getClient(): SupabaseClient {
 export interface Run {
   token_id: number;
   maze_id: number;
+  network: string;
   address: string;
   time_ms: number;
   minted_at: string;
   tx_hash: string;
+  attempts?: number;
+  path_svg?: string;
   rank?: number;
 }
 
 /** Fetch today's leaderboard sorted by time_ms ascending */
-export async function fetchLeaderboard(mazeId: number): Promise<Run[]> {
+export async function fetchLeaderboard(mazeId: number, network: string): Promise<Run[]> {
   try {
     const { data, error } = await getClient()
       .from('ham_runs')
       .select('*')
       .eq('maze_id', mazeId)
+      .eq('network', network)
       .order('time_ms', { ascending: true })
       .limit(50);
     if (error) { console.error('Leaderboard fetch error:', error); return []; }
@@ -38,32 +42,38 @@ export async function fetchLeaderboard(mazeId: number): Promise<Run[]> {
   } catch { return []; }
 }
 
-/** Insert or update a run (upsert by token_id) */
-export async function upsertRun(run: Omit<Run, 'rank'>): Promise<void> {
+/** Insert or update a run (upsert by network and token_id) using Admin Key */
+export async function adminUpsertRun(run: Omit<Run, 'rank'>): Promise<void> {
   try {
-    const { error } = await getClient().from('ham_runs').upsert(run, { onConflict: 'token_id' });
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !adminKey) throw new Error('Missing Admin Key');
+    
+    const adminClient = createClient(url, adminKey);
+    const { error } = await adminClient.from('ham_runs').upsert(run, { onConflict: 'network,token_id' });
     if (error) console.error('Upsert error:', error);
-  } catch (e) { console.error('upsertRun:', e); }
+  } catch (e) { console.error('adminUpsertRun:', e); }
 }
 
-/** Fetch pot total for a given maze day (sum of all mints × 0.001 ETH) */
-export async function fetchPotEth(mazeId: number): Promise<number> {
+/** Fetch pot total for a given maze day (sum of all mints × 0.001 ETH/STX) */
+export async function fetchPotEth(mazeId: number, network: string): Promise<number> {
   try {
     const { count, error } = await getClient()
       .from('ham_runs')
       .select('*', { count: 'exact', head: true })
-      .eq('maze_id', mazeId);
+      .eq('maze_id', mazeId)
+      .eq('network', network);
     if (error) return 0;
     return (count ?? 0) * 0.001;
   } catch { return 0; }
 }
 
-/** Fetch all unique maze IDs played by a user */
-export async function fetchUserMazeIds(address: string): Promise<number[]> {
+export async function fetchUserMazeIds(address: string, network: string): Promise<number[]> {
   try {
     const { data, error } = await getClient()
       .from('ham_runs')
       .select('maze_id')
+      .eq('network', network)
       .ilike('address', address);
     if (error) return [];
     const ids = data.map(r => r.maze_id);
