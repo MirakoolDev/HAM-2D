@@ -13,7 +13,7 @@ export const network = STACKS_TESTNET;
 
 // Define the contract address and name
 export const CONTRACT_ADDRESS = "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
-export const CONTRACT_NAME = "ham-maze";
+export const CONTRACT_NAME = "ham-maze-v2";
 
 export class StacksGameService implements IBlockchainProvider {
   async connectWallet() {

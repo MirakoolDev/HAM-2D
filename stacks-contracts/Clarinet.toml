@@ -6,8 +6,8 @@ telemetry = false
 requirements = []
 cache_dir = ".\.cache"
 
-[contracts.ham-maze]
-path = "contracts/ham-maze.clar"
+[contracts.ham-maze-v2]
+path = "contracts/ham-maze-v2.clar"
 depends_on = []
 
 [repl]
