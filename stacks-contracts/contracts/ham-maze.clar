@@ -10,12 +10,14 @@
 (define-constant err-not-found (err u101))
 (define-constant err-already-settled (err u102))
 (define-constant err-not-token-owner (err u103))
+(define-constant err-invalid-signature (err u104))
 
 ;; Variables
 (define-data-var last-token-id uint u0)
 (define-data-var contract-owner principal tx-sender)
 (define-data-var winner-share-percent uint u10) ;; 10% to each of the 10 winners (total 100% of the distributed pool, which is 75% of total pool)
 (define-data-var mint-fee uint u1000000) ;; 1 STX
+(define-data-var server-pubkey (buff 33) 0x029d5cce548dc2f2df51d364c7af72bd0b63b59a655d6730ad7fcab5be70921b75)
 
 ;; Maps
 ;; maze-id -> total prize pool in STX
@@ -38,9 +40,7 @@
 )
 
 (define-read-only (get-token-uri (token-id uint))
-  ;; SIP-009 limits this to 256 chars. We return a hypothetical API endpoint.
-  ;; The actual SVG path is stored fully on-chain in the `runs` map!
-  (ok (some "https://ham-maze.vercel.app/api/metadata/{id}"))
+  (ok none)
 )
 
 (define-read-only (get-owner (token-id uint))
@@ -77,6 +77,13 @@
   )
 )
 
+(define-public (set-server-pubkey (new-pubkey (buff 33)))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
+    (ok (var-set server-pubkey new-pubkey))
+  )
+)
+
 (define-public (set-mint-fee (new-fee uint))
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
@@ -86,17 +93,23 @@
 
 ;; Core Game Functions
 
+(define-read-only (hash-run (maze-id uint) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)))
+  (sha256 (unwrap-panic (to-consensus-buff? { maze-id: maze-id, time-ms: time-ms, attempts: attempts, path-svg: path-svg, minter: tx-sender })))
+)
+
 ;; Mint a new run result NFT
-(define-public (mint-run (maze-id uint) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)))
+(define-public (mint-run (maze-id uint) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)) (signature (buff 65)))
   (let
     (
+      (msg-hash (hash-run maze-id time-ms attempts path-svg))
       (token-id (+ (var-get last-token-id) u1))
       (current-pool (get-prize-pool maze-id))
       (fee (var-get mint-fee))
     )
+    (asserts! (secp256k1-verify msg-hash signature (var-get server-pubkey)) err-invalid-signature)
     (try! (stx-transfer? fee tx-sender (as-contract tx-sender)))
     (try! (nft-mint? ham-run token-id tx-sender))
-    
+
     ;; Store the run data fully on-chain
     (map-set runs token-id {
       maze-id: maze-id,
@@ -105,7 +118,7 @@
       attempts: attempts,
       path-svg: path-svg
     })
-    
+
     (var-set last-token-id token-id)
     (map-set maze-prize-pools maze-id (+ current-pool fee))
     (ok token-id)
@@ -138,10 +151,10 @@
     )
     (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
     (asserts! (not is-settled) err-already-settled)
-    
+
     ;; Fold over winners to pay them
     (fold pay-winner winners { share: winner-share, total-paid: u0 })
-    
+
     (map-set maze-settled maze-id true)
     (ok true)
   )
