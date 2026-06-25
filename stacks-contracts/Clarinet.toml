@@ -10,6 +10,10 @@ cache_dir = ".\.cache"
 path = "contracts/ham-maze-v2.clar"
 depends_on = []
 
+[contracts.ham-maze-v3]
+path = "contracts/ham-maze-v3.clar"
+depends_on = []
+
 [repl]
 costs_version = 2
 parser_version = 2

@@ -80,3 +80,24 @@ export async function fetchUserMazeIds(address: string, network: string): Promis
     return Array.from(new Set(ids));
   } catch { return []; }
 }
+
+export interface Campaign {
+  maze_id: number;
+  network: string;
+  contract_address: string;
+  multiplier: number;
+  image_url: string;
+}
+
+export async function fetchCampaign(mazeId: number, network: string): Promise<Campaign | null> {
+  try {
+    const { data, error } = await getClient()
+      .from('ham_campaigns')
+      .select('*')
+      .eq('maze_id', mazeId)
+      .eq('network', network)
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch { return null; }
+}

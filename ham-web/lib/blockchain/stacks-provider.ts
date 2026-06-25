@@ -12,8 +12,8 @@ import { STACKS_TESTNET } from '@stacks/network';
 export const network = STACKS_TESTNET;
 
 // Define the contract address and name
-export const CONTRACT_ADDRESS = "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
-export const CONTRACT_NAME = "ham-maze-v2";
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+export const CONTRACT_NAME = process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v3";
 
 export class StacksGameService implements IBlockchainProvider {
   async connectWallet() {
@@ -50,6 +50,24 @@ export class StacksGameService implements IBlockchainProvider {
     return null;
   }
 
+  async isMazeSettled(mazeId: number) {
+    try {
+      const sender = this.getAddress() || CONTRACT_ADDRESS;
+      const response = await fetchCallReadOnlyFunction({
+        network,
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'is-maze-settled',
+        functionArgs: [uintCV(mazeId)],
+        senderAddress: sender,
+      });
+      return cvToValue(response);
+    } catch (e) {
+      console.error("Failed to check if settled:", e);
+      return false;
+    }
+  }
+
   async getPrizePool(mazeId: number) {
     try {
       const sender = this.getAddress() || CONTRACT_ADDRESS;
@@ -70,8 +88,7 @@ export class StacksGameService implements IBlockchainProvider {
   }
 
   async getLeaderboard(mazeId: number) {
-    // A true on-chain leaderboard requires an indexer (e.g., Supabase fetching contract events)
-    // For now we return an empty array until the backend is hooked up.
+    // We now use /api/leaderboard on the frontend instead of stacks-provider
     return [];
   }
 
@@ -89,7 +106,7 @@ export class StacksGameService implements IBlockchainProvider {
           mazeId: runData.mazeId,
           timeMs: runData.timeMs,
           attempts: runData.attempts,
-          pathSvg: runData.pathSvg,
+          pathSvg: runData.pathSvg.slice(0, 4096),
           chain: "STACKS"
         }),
       });
@@ -110,8 +127,9 @@ export class StacksGameService implements IBlockchainProvider {
             uintCV(runData.timeMs),
             uintCV(runData.attempts),
             stringAsciiCV(runData.pathSvg.slice(0, 4096)),
-            bufferCV(Buffer.from(data.signature, 'hex'))
+            bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
+          postConditionMode: 1, // PostConditionMode.Allow (1)
           userSession, // Pass explicit userSession to avoid unauthorized errors
           onFinish: (data) => {
             console.log("Mint transaction broadcasted", data);
@@ -128,29 +146,52 @@ export class StacksGameService implements IBlockchainProvider {
     }
   }
 
-  async settleMaze(mazeId: number, winners: string[] = []) {
-    return new Promise<{ txId: string }>((resolve, reject) => {
+  async settleMaze(mazeId: number) {
+    try {
+      // 1. Fetch ECDSA signature and winners from backend
+      const res = await fetch('/api/sign-settlement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mazeId,
+          network: network === STACKS_TESTNET ? 'testnet' : 'mainnet'
+        }),
+      });
+      const data = await res.json();
+      if (data.error || !data.signature) {
+        throw new Error(data.error || "Failed to fetch settlement signature");
+      }
+
+      const winners: string[] = data.winners;
+      const signatureHex = data.signature;
+
       // Create a list of up to 10 principals
       const winnerPrincipals = winners.slice(0, 10).map(w => principalCV(w));
       
-      openContractCall({
-        network,
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
-        functionName: 'settle-maze',
-        functionArgs: [
-          uintCV(mazeId),
-          listCV(winnerPrincipals)
-        ],
-        userSession, // Pass explicit userSession to avoid unauthorized errors
-        onFinish: (data) => {
-          console.log("Settle transaction broadcasted", data);
-          resolve({ txId: data.txId });
-        },
-        onCancel: () => {
-          reject(new Error("User cancelled settlement"));
-        }
+      return new Promise<{ txId: string }>((resolve, reject) => {
+        openContractCall({
+          network,
+          contractAddress: CONTRACT_ADDRESS,
+          contractName: CONTRACT_NAME,
+          functionName: 'settle-maze',
+          functionArgs: [
+            uintCV(mazeId),
+            listCV(winnerPrincipals),
+            bufferCV(new Uint8Array(signatureHex.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
+          ],
+          userSession,
+          onFinish: (data) => {
+            console.log("Settle transaction broadcasted", data);
+            resolve({ txId: data.txId });
+          },
+          onCancel: () => {
+            reject(new Error("User cancelled settlement"));
+          }
+        });
       });
-    });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }

@@ -33,18 +33,20 @@ export async function POST(req: NextRequest) {
         'minter': principalCV(address),
       });
 
-      const buff = serializeCV(tuple);
+      const hexStr = serializeCV(tuple);
+      // Convert the hex string to raw bytes since sha256 expects a byte array (passing a string makes it hash the utf-8 text!)
+      const rawBytes = new Uint8Array(hexStr.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
       
       // 2. Hash it with SHA256 (matches Clarity `sha256`)
-      const hash = sha256(buff);
+      const hash = sha256(rawBytes);
 
       // 3. Sign it using the Stacks private key (produces 65-byte RSV signature)
-      const signatureObj = signMessageHashRsv({ 
+      const signatureStr = signMessageHashRsv({ 
         messageHash: Buffer.from(hash).toString('hex'), 
         privateKey: SIGNER_PRIVATE_KEY 
       });
       
-      return NextResponse.json({ signature: signatureObj.data });
+      return NextResponse.json({ signature: signatureStr });
     } 
     else {
       // EVM EIP-712 Signer

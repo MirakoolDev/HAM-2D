@@ -18,7 +18,7 @@ import {
 const MAZE_SIZE = parseInt(process.env.NEXT_PUBLIC_MAZE_SIZE ?? '15');
 const WALL_THICKNESS = 3;   // px
 const PATH_WIDTH = 5;        // px player path
-const TOLERANCE = 4;         // wall collision tolerance in px
+const TOLERANCE = 4;         // wall collision tolerance in px default 4
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -107,12 +107,12 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         const trailPoints = 40; // Length of the comet tail
         const startIdx = Math.max(0, pathRef.current.length - trailPoints);
         const totalTrail = pathRef.current.length - 1 - startIdx;
-        
+
         for (let i = startIdx; i < pathRef.current.length - 1; i++) {
           const p1 = pathRef.current[i];
           const p2 = pathRef.current[i + 1];
           const alpha = totalTrail > 0 ? (i - startIdx) / totalTrail : 1;
-          
+
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
@@ -143,7 +143,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         fCtx.globalCompositeOperation = 'source-over';
         fCtx.fillStyle = '#000000'; // Dark fog color
         fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
-        
+
         let lightX = cellPx / 2;
         let lightY = cellPx / 2;
         if (stateRef.current === 'playing' && pathRef.current.length > 0) {
@@ -157,12 +157,12 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         const grad = fCtx.createRadialGradient(lightX, lightY, radius * 0.1, lightX, lightY, radius);
         grad.addColorStop(0, 'rgba(0,0,0,1)');
         grad.addColorStop(1, 'rgba(0,0,0,0)');
-        
+
         fCtx.fillStyle = grad;
         fCtx.beginPath();
         fCtx.arc(lightX, lightY, radius, 0, Math.PI * 2);
         fCtx.fill();
-        
+
         ctx.drawImage(fCanvas, 0, 0);
       }
     }
@@ -347,9 +347,8 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}>
       <div
-        className={`timer-display ${
-          gameState === 'playing' ? 'running' : gameState === 'success' ? 'done' : ''
-        }`}
+        className={`timer-display ${gameState === 'playing' ? 'running' : gameState === 'success' ? 'done' : ''
+          }`}
       >
         {formatTime(elapsed)}
       </div>
