@@ -1,32 +1,46 @@
-import { AppConfig, UserSession } from '@stacks/connect';
-import { STACKS_MOCKNET, STACKS_TESTNET } from '@stacks/network';
+import type { AppConfig as AppConfigType, UserSession as UserSessionType } from '@stacks/connect';
 
-const appConfig = new AppConfig(['store_write']);
-export const userSession = new UserSession({ appConfig });
+// Wrap in getter to prevent Turbopack SSR module instantiation crashes
+let userSessionInstance: UserSessionType | null = null;
+export const getUserSession = () => {
+  if (typeof window === 'undefined') return {} as UserSessionType;
+  if (!userSessionInstance) {
+    const { AppConfig, UserSession } = require('@stacks/connect');
+    const appConfig = new AppConfig(['store_write']);
+    userSessionInstance = new UserSession({ appConfig });
+  }
+  return userSessionInstance;
+};
+
+// Export userSession as a proxy to maintain backward compatibility
+export const userSession = new Proxy({}, {
+  get(target, prop) {
+    const session = getUserSession();
+    const value = (session as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(session);
+    }
+    return value;
+  }
+}) as UserSessionType;
 
 import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV } from '@stacks/transactions';
 import { IBlockchainProvider, RunData } from './interface';
+import { STACKS_MOCKNET, STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 
 // The contract was deployed to Mainnet (SP... address)
-import { STACKS_MAINNET } from '@stacks/network';
 export const network = STACKS_MAINNET;
 
 // Define the contract address and name
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
 export const CONTRACT_NAME = "ham-maze-v4";
 
-let stacksConnectAPI: any = null;
-if (typeof window !== 'undefined') {
-  import('@stacks/connect').then(api => {
-    stacksConnectAPI = api;
-  });
-}
+import { authenticate, openContractCall } from '@stacks/connect';
 
 export class StacksGameService implements IBlockchainProvider {
   async connectWallet() {
     return new Promise<void>(async (resolve, reject) => {
-      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
-      stacksConnectAPI.authenticate({
+      authenticate({
         appDetails: {
           name: 'HAM Maze',
           icon: window.location.origin + '/favicon.ico',
@@ -142,9 +156,8 @@ export class StacksGameService implements IBlockchainProvider {
       }
 
       // 2. Broadcast transaction with signature
-      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
       return new Promise<{ txId: string }>((resolve, reject) => {
-        stacksConnectAPI.openContractCall({
+        openContractCall({
           network,
           contractAddress: CONTRACT_ADDRESS,
           contractName: CONTRACT_NAME,
@@ -196,9 +209,8 @@ export class StacksGameService implements IBlockchainProvider {
       // Create a list of up to 10 principals
       const winnerPrincipals = winners.slice(0, 10).map(w => principalCV(w));
 
-      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
       return new Promise<{ txId: string }>((resolve, reject) => {
-        stacksConnectAPI.openContractCall({
+        openContractCall({
           network,
           contractAddress: CONTRACT_ADDRESS,
           contractName: CONTRACT_NAME,

@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import dynamicImport from 'next/dynamic';
 import { useState, useEffect } from 'react';
+import { Providers } from './providers';
 
 // Load components client-side — prevents Wagmi/Privy SSR errors
 const GameShell = dynamicImport(() => import('@/components/GameShell'), { ssr: false });
@@ -9,7 +10,7 @@ const AdminPage = dynamicImport(() => import('@/app/admin/page'), { ssr: false }
 
 import { useGameChain } from '@/components/GameProvider';
 
-export default function Home() {
+function PageContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const { address } = useGameChain();
 
@@ -36,4 +37,8 @@ export default function Home() {
       {isAdmin ? <AdminPage /> : <GameShell />}
     </>
   );
+}
+
+export default function Home() {
+  return <PageContent />;
 }

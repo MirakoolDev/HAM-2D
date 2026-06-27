@@ -241,8 +241,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
               
               {inPrizes ? (
                 <span style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)' }}>{getPayoutInfo(rank, runs.length, prizePool).stx}</span>
-                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{getPayoutInfo(rank, runs.length, prizePool).pct}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>{getPayoutInfo(rank, runs.length, prizePool).stx}</span>
                 </span>
               ) : (
                 <span style={{ textAlign: 'right', color: 'var(--text-muted)' }}>—</span>

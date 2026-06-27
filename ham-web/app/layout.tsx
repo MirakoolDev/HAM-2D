@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Providers } from './providers';
+import DynamicProviders from './DynamicProviders';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning>
-        <Providers>{children}</Providers>
+        <DynamicProviders>{children}</DynamicProviders>
       </body>
     </html>
   );
