@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyMessageSignatureRsv } from '@stacks/encryption';
-import { getAddressFromPublicKey, TransactionVersion } from '@stacks/transactions';
+import { getAddressFromPublicKey, AddressVersion } from '@stacks/transactions';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
 
     if (!isValid) throw new Error("Invalid wallet signature");
 
-    const address = getAddressFromPublicKey(publicKey, network === 'mainnet' ? TransactionVersion.Mainnet : TransactionVersion.Testnet);
-    if (address !== "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1") {
+    const stacksNet = network.includes('testnet') ? 'testnet' : 'mainnet';
+    const address = getAddressFromPublicKey(publicKey, stacksNet);
+    const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+    if (address !== adminAddress) {
       throw new Error("Wallet is not authorized admin");
     }
 

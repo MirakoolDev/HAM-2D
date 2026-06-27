@@ -51,10 +51,21 @@ export async function POST(req: NextRequest) {
     }
 
     // Sort descending by score, grab top 10
-    const top10 = Array.from(addressToBestRun.values())
+    const top10Runs = Array.from(addressToBestRun.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map(r => r.address);
+      .slice(0, 10);
+
+    const { getCurrentOwner } = await import('@/lib/stacks-api');
+    
+    const top10 = [];
+    for (const r of top10Runs) {
+      if (r.token_id) {
+        const currentOwner = await getCurrentOwner(r.token_id, isTestnet);
+        top10.push(currentOwner || r.address);
+      } else {
+        top10.push(r.address);
+      }
+    }
 
     const privateKeyHex = process.env.SIGNER_PRIVATE_KEY;
     if (!privateKeyHex) {
@@ -68,17 +79,17 @@ export async function POST(req: NextRequest) {
     });
 
     const serializedBytes = serializeCV(payloadCV);
-    const hash = createHash('sha256').update(serializedBytes).digest();
+    const hash = createHash('sha256').update(Buffer.from(serializedBytes, 'hex')).digest();
     
     // Using Stacks library signMessageHashRsv
-    const signatureObj = signMessageHashRsv({
+    const signatureStr = signMessageHashRsv({
       messageHash: hash.toString('hex'),
       privateKey: privateKeyHex
     });
 
     return NextResponse.json({
       winners: top10,
-      signature: signatureObj.data
+      signature: signatureStr
     });
   } catch (err) {
     console.error('[sign-settlement]', err);

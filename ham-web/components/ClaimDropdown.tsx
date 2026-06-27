@@ -70,8 +70,8 @@ export default function ClaimDropdown() {
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                 Maze #{c.mazeId}
               </span>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 style={{ padding: '4px 8px', fontSize: 10 }}
                 onClick={() => handleClaim(c.mazeId)}
               >

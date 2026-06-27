@@ -3,7 +3,9 @@
 import { useGameChain } from './GameProvider';
 import { useEffect, useState } from 'react';
 import { getTodaySeed } from '@/lib/maze';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import WelcomeModal from './WelcomeModal';
 
 interface NavbarProps {
   mazeId: number;
@@ -11,25 +13,50 @@ interface NavbarProps {
 
 const ADMIN_ADDRESS = "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
 
-import { useRouter } from 'next/navigation';
-
 export default function Navbar({ mazeId }: NavbarProps) {
   const { address, connectWallet, disconnectWallet, provider } = useGameChain();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [prizePool, setPrizePool] = useState<number>(0);
   const [isSettled, setIsSettled] = useState(false);
-  const [mintFee, setMintFee] = useState(1); // Default 1 STX
+  const [mintFee, setMintFee] = useState(1);
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   const router = useRouter();
-  
+
   const isPastMaze = mazeId < getTodaySeed();
   const isOwner = address === ADMIN_ADDRESS;
+
+  useEffect(() => {
+    async function checkProfile() {
+      if (!address) {
+        setProfileName(null);
+        setShowWelcome(true);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/profile?address=${address}`);
+        const data = await res.json();
+        if (data.profile?.username) {
+          setProfileName(data.profile.username);
+          setShowWelcome(false);
+        } else {
+          setProfileName(null);
+          setShowWelcome(true);
+        }
+      } catch (e) {
+        console.error('Failed to fetch profile', e);
+      }
+    }
+    checkProfile();
+  }, [address]);
 
   useEffect(() => {
     async function fetchStats() {
       try {
         const pool = await provider.getPrizePool(mazeId);
-        setPrizePool(parseInt(pool) / 1000000); // Convert uSTX to STX
-        
+        setPrizePool(parseInt(pool) / 1_000_000);
+        const fee = await provider.getMintFee?.() || "1000000";
+        setMintFee(parseInt(fee) / 1_000_000);
         if (isPastMaze) {
           const settled = await provider.isMazeSettled(mazeId);
           setIsSettled(settled);
@@ -52,180 +79,156 @@ export default function Navbar({ mazeId }: NavbarProps) {
   };
 
   return (
-    <header className="navbar-custom">
-      <div className="nav-left">
-        <span className="nav-brand">HAM</span>
+    <>
+    <header style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
+      background: 'var(--bg-dark)',
+      borderBottom: '1px solid var(--border)',
+      height: 60,
+      flexShrink: 0,
+      zIndex: 100,
+    }}>
+
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Image
+          src="/logo.jpg"
+          alt="HAM"
+          width={32}
+          height={32}
+          style={{ borderRadius: 4 }}
+          priority
+        />
+        <span style={{
+          fontFamily: 'var(--font-head)',
+          fontWeight: 700,
+          fontSize: 20,
+          letterSpacing: '0.08em',
+          color: 'var(--text)',
+        }}>HAM</span>
       </div>
 
-      <div className="nav-stats">
-        <div className="nav-stat-group">
-          <div className="stat-label">CURRENT SCORE</div>
-          <div className="stat-value">
-            <span>--</span>
-            <span className="stat-sub" style={{ opacity: 0 }}>-</span>
+      {/* Stats */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+        {[
+          { label: 'POT SIZE', value: `${prizePool.toFixed(2)} STX` },
+          { label: 'MINT FEE', value: `${mintFee} STX` },
+        ].map(({ label, value }, i) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+            {i > 0 && <div style={{ width: 1, height: 28, background: 'var(--border)' }} />}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{label}</span>
+              <span style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{value}</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="nav-divider" />
-
-        <div className="nav-stat-group">
-          <div className="stat-label">POT SIZE</div>
-          <div className="stat-value">
-            <span>{prizePool.toFixed(2)} STX</span>
-            <span className="stat-sub">$0.00</span>
-          </div>
-        </div>
-
-        <div className="nav-divider" />
-
-        <div className="nav-stat-group">
-          <div className="stat-label">MINT FEE</div>
-          <div className="stat-value">
-            <span>{mintFee} STX</span>
-            <span className="stat-sub" style={{ opacity: 0 }}>-</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="nav-right">
-        {address ? (
-          <div className="wallet-dropdown-container">
-            <button className="btn btn-primary" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              {address.slice(0, 6)}...{address.slice(-4)}
+      {/* Actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button
+          onClick={() => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+            localStorage.setItem('theme', isLight ? 'dark' : 'light');
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: 20,
+            cursor: 'pointer',
+            padding: 4,
+          }}
+          title="Toggle Theme"
+        >
+          🌓
+        </button>
+
+        <div style={{ position: 'relative' }}>
+          {address ? (
+            <>
+              <button
+                className="wallet-btn connected"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                {profileName ? profileName : `${address.slice(0, 6)}…${address.slice(-4)}`}
+              </button>
+              {dropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  background: 'var(--bg-panel)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  overflow: 'hidden',
+                  zIndex: 200,
+                  minWidth: 180,
+                  boxShadow: 'var(--shadow-lg)',
+                }}>
+                  {isOwner && (
+                    <button
+                      onClick={() => { setDropdownOpen(false); router.push('/admin'); }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer' }}
+                    >
+                      Admin Dashboard
+                    </button>
+                  )}
+                  {isPastMaze && !isSettled && (
+                    <button
+                      onClick={handleSettle}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--gold)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer' }}
+                    >
+                      Settle Maze #{mazeId}
+                    </button>
+                  )}
+                  {isPastMaze && isSettled && (
+                    <button
+                      disabled
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'default' }}
+                    >
+                      Maze Settled ✓
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setDropdownOpen(false); setShowWelcome(true); }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', background: 'none', border: 'none', borderBottom: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer' }}
+                  >
+                    Change Username
+                  </button>
+                  <button
+                    onClick={() => { disconnectWallet(); setDropdownOpen(false); }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 16px', background: 'none', border: 'none', color: 'var(--danger)', fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,68,68,0.1)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <button className="wallet-btn" onClick={connectWallet}>
+              Connect Wallet
             </button>
-            {dropdownOpen && (
-              <div className="wallet-dropdown">
-                {isOwner && (
-                  <button onClick={() => { setDropdownOpen(false); router.push('/admin'); }} className="dropdown-item" style={{ color: 'var(--accent)' }}>
-                    Admin Dashboard
-                  </button>
-                )}
-                {isPastMaze && !isSettled && (
-                  <button onClick={handleSettle} className="dropdown-item" style={{color: 'var(--goal)'}}>
-                    Settle Maze #{mazeId}
-                  </button>
-                )}
-                {isPastMaze && isSettled && (
-                  <button disabled className="dropdown-item" style={{color: 'var(--text-muted)'}}>
-                    Maze Settled ✓
-                  </button>
-                )}
-                <button onClick={() => { disconnectWallet(); setDropdownOpen(false); }} className="dropdown-item danger">
-                  Disconnect
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <button className="btn btn-primary" onClick={connectWallet}>
-            Connect Wallet
-          </button>
-        )}
+          )}
+        </div>
       </div>
-      
-      <style jsx>{`
-        .navbar-custom {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 16px;
-          background-color: rgba(0, 0, 0, 0.9);
-          border-bottom: 1px solid var(--border);
-          font-family: var(--font-mono);
-          height: 60px;
-        }
-        .nav-left {
-          display: flex;
-          align-items: center;
-        }
-        .nav-brand {
-          font-weight: bold;
-          font-size: 20px;
-          letter-spacing: 2px;
-        }
-        .nav-stats {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-        .nav-stat-group {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 2px;
-        }
-        .stat-label {
-          font-size: 10px;
-          color: var(--text-muted);
-          letter-spacing: 1px;
-        }
-        .stat-value {
-          display: flex;
-          flex-direction: column;
-          font-size: 14px;
-          font-weight: bold;
-          line-height: 1.2;
-        }
-        .stat-sub {
-          font-size: 10px;
-          color: var(--text-muted);
-          font-weight: normal;
-        }
-        .nav-divider {
-          width: 1px;
-          height: 24px;
-          background-color: var(--border);
-        }
-        .nav-right {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .wallet-dropdown-container {
-          position: relative;
-        }
-        .wallet-dropdown {
-          position: absolute;
-          top: 100%;
-          right: 0;
-          margin-top: 8px;
-          background-color: #111;
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          overflow: hidden;
-          z-index: 100;
-          min-width: 160px;
-        }
-        .dropdown-item {
-          display: block;
-          width: 100%;
-          padding: 12px 16px;
-          text-align: left;
-          background: none;
-          border: none;
-          border-bottom: 1px solid #222;
-          color: white;
-          font-family: var(--font-mono);
-          font-size: 12px;
-          cursor: pointer;
-        }
-        .dropdown-item:last-child {
-          border-bottom: none;
-        }
-        .dropdown-item:hover:not(:disabled) {
-          background-color: rgba(255, 255, 255, 0.1);
-        }
-        .dropdown-item.danger:hover {
-          background-color: rgba(255, 0, 0, 0.2);
-          color: #ff4444;
-        }
-        
-        @media (max-width: 800px) {
-          .nav-stats {
-            display: none;
-          }
-        }
-      `}</style>
+
     </header>
+      <WelcomeModal 
+        isOpen={showWelcome} 
+        onClose={() => setShowWelcome(false)} 
+        address={address || null}
+        profileName={profileName}
+        onProfileUpdated={(name) => {
+          setProfileName(name);
+          setShowWelcome(false);
+        }}
+      />
+    </>
   );
 }

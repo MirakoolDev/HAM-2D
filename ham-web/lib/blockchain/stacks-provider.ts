@@ -1,4 +1,4 @@
-import { showConnect, openContractCall, AppConfig, UserSession } from '@stacks/connect';
+import { AppConfig, UserSession } from '@stacks/connect';
 import { STACKS_MOCKNET } from '@stacks/network';
 
 const appConfig = new AppConfig(['store_write']);
@@ -12,13 +12,21 @@ import { STACKS_TESTNET } from '@stacks/network';
 export const network = STACKS_TESTNET;
 
 // Define the contract address and name
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
-export const CONTRACT_NAME = process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v3";
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+export const CONTRACT_NAME = "ham-maze-v4";
+
+let stacksConnectAPI: any = null;
+if (typeof window !== 'undefined') {
+  import('@stacks/connect').then(api => {
+    stacksConnectAPI = api;
+  });
+}
 
 export class StacksGameService implements IBlockchainProvider {
   async connectWallet() {
-    return new Promise<void>((resolve, reject) => {
-      showConnect({
+    return new Promise<void>(async (resolve, reject) => {
+      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
+      stacksConnectAPI.authenticate({
         appDetails: {
           name: 'HAM Maze',
           icon: window.location.origin + '/favicon.ico',
@@ -45,7 +53,7 @@ export class StacksGameService implements IBlockchainProvider {
     if (userSession.isUserSignedIn()) {
       const userData = userSession.loadUserData();
       // Use testnet address if network is testnet/mocknet, else mainnet
-      return userData.profile.stxAddress.testnet; 
+      return userData.profile.stxAddress.testnet;
     }
     return null;
   }
@@ -79,11 +87,29 @@ export class StacksGameService implements IBlockchainProvider {
         functionArgs: [uintCV(mazeId)],
         senderAddress: sender,
       });
-      // cvToValue returns the value directly (e.g. integer value for uintCV)
       return cvToValue(response).toString();
     } catch (e) {
       console.error("Failed to get prize pool:", e);
       return "0";
+    }
+  }
+
+  async getMintFee() {
+    try {
+      const url = `https://api.testnet.hiro.so/v2/data_var/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/mint-fee`;
+      const response = await fetch(url);
+      const json = await response.json();
+      if (json.data) {
+        // json.data is a hex string like 0x01000000...0f4240 (uintCV)
+        const hex = json.data.startsWith('0x') ? json.data.slice(2) : json.data;
+        // The last 32 hex chars (16 bytes) represent the uint value
+        const valHex = hex.slice(-32);
+        return parseInt(valHex, 16).toString();
+      }
+      return "1000000";
+    } catch (e) {
+      console.error("Failed to get mint fee:", e);
+      return "1000000"; // default 1 STX in microSTX
     }
   }
 
@@ -116,8 +142,9 @@ export class StacksGameService implements IBlockchainProvider {
       }
 
       // 2. Broadcast transaction with signature
+      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
       return new Promise<{ txId: string }>((resolve, reject) => {
-        openContractCall({
+        stacksConnectAPI.openContractCall({
           network,
           contractAddress: CONTRACT_ADDRESS,
           contractName: CONTRACT_NAME,
@@ -127,6 +154,7 @@ export class StacksGameService implements IBlockchainProvider {
             uintCV(runData.timeMs),
             uintCV(runData.attempts),
             stringAsciiCV(runData.pathSvg.slice(0, 4096)),
+            stringAsciiCV(data.ipfsUri),
             bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
           postConditionMode: 1, // PostConditionMode.Allow (1)
@@ -167,9 +195,10 @@ export class StacksGameService implements IBlockchainProvider {
 
       // Create a list of up to 10 principals
       const winnerPrincipals = winners.slice(0, 10).map(w => principalCV(w));
-      
+
+      if (!stacksConnectAPI) throw new Error("Wallet API not loaded");
       return new Promise<{ txId: string }>((resolve, reject) => {
-        openContractCall({
+        stacksConnectAPI.openContractCall({
           network,
           contractAddress: CONTRACT_ADDRESS,
           contractName: CONTRACT_NAME,
@@ -179,6 +208,7 @@ export class StacksGameService implements IBlockchainProvider {
             listCV(winnerPrincipals),
             bufferCV(new Uint8Array(signatureHex.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
+          postConditionMode: 1, // Allow contract to transfer STX
           userSession,
           onFinish: (data) => {
             console.log("Settle transaction broadcasted", data);

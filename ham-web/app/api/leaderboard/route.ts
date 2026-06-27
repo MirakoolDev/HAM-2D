@@ -21,8 +21,10 @@ export async function GET(req: NextRequest) {
 
     // We only want the best score per address
     const addressToBestRun = new Map<string, any>();
+    const addressesToFetch = new Set<string>();
 
     for (const run of runs) {
+      addressesToFetch.add(run.address);
       let hasBooster = false;
       if (campaign?.contract_address) {
         hasBooster = await checkHasToken(run.address, campaign.contract_address, isTestnet);
@@ -50,8 +52,29 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Fetch usernames for all addresses
+    const profileMap = new Map<string, string>();
+    if (addressesToFetch.size > 0) {
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: profiles } = await supabase
+        .from('ham_profiles')
+        .select('address, username')
+        .in('address', Array.from(addressesToFetch));
+      
+      if (profiles) {
+        profiles.forEach((p: any) => profileMap.set(p.address, p.username));
+      }
+    }
+
     // Convert map to array and sort by score descending
-    const finalLeaderboard = Array.from(addressToBestRun.values()).sort((a, b) => b.score - a.score);
+    const finalLeaderboard = Array.from(addressToBestRun.values()).map(run => ({
+      ...run,
+      username: profileMap.get(run.address) || null
+    })).sort((a, b) => b.score - a.score);
 
     // Assign final ranks
     finalLeaderboard.forEach((run, i) => run.rank = i + 1);

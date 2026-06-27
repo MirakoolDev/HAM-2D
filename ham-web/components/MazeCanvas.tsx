@@ -57,10 +57,17 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
     const ctx = canvas.getContext('2d')!;
     const cellPx = cellPxRef.current;
 
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const bg = isLight ? '#f4f4f5' : '#0a0a0a';
+    const wallColor = isLight ? '#a1a1aa' : '#333333';
+    const fgColor = isLight ? '#18181b' : '#ffffff';
+    const fogBg = isLight ? '#e4e4e7' : '#000000';
+    const failColor = isLight ? '#dc2626' : '#ff0000';
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Background
-    ctx.fillStyle = '#0a0a0a';
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Goal cell highlight
@@ -71,7 +78,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
     ctx.fillRect(gx, gz, cellPx, cellPx);
 
     // Walls
-    ctx.strokeStyle = '#333333';
+    ctx.strokeStyle = wallColor;
     ctx.lineWidth = WALL_THICKNESS;
     ctx.lineCap = 'square';
     for (const w of wallsRef.current) {
@@ -81,16 +88,18 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
       ctx.stroke();
     }
 
-    // Start strip — top opening of [0,0]
+    // Start strip — top opening of [0,0] inside walls
+    const pad = WALL_THICKNESS;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, cellPx, 5);
+    ctx.fillRect(pad, 0, cellPx - pad * 2, 5);
     ctx.fillStyle = '#000000';
+    const stripeW = (cellPx - pad * 2) / 4;
     for (let i = 0; i < 4; i++) {
-      if (i % 2 === 0) ctx.fillRect(i * (cellPx / 4), 0, cellPx / 4, 5);
+      if (i % 2 === 0) ctx.fillRect(pad + i * stripeW, 0, stripeW, 5);
     }
 
     // Goal star
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = fgColor;
     ctx.font = `${cellPx * 0.45}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -116,15 +125,15 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-          ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 0.5})`;
+          ctx.strokeStyle = isLight ? `rgba(24, 24, 27, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+          ctx.shadowColor = isLight ? `rgba(24, 24, 27, ${alpha * 0.5})` : `rgba(255, 255, 255, ${alpha * 0.5})`;
           ctx.shadowBlur = 8;
           ctx.stroke();
         }
       } else {
         // Full solid path on success/fail
-        ctx.strokeStyle = stateRef.current === 'failed' ? '#ff0000' : '#ffffff';
-        ctx.shadowColor = stateRef.current === 'failed' ? '#ff0000' : 'rgba(255,255,255,0.5)';
+        ctx.strokeStyle = stateRef.current === 'failed' ? failColor : fgColor;
+        ctx.shadowColor = stateRef.current === 'failed' ? failColor : (isLight ? 'rgba(24,24,27,0.5)' : 'rgba(255,255,255,0.5)');
         ctx.shadowBlur = 8;
         ctx.beginPath();
         pathRef.current.forEach((p, i) =>
@@ -141,7 +150,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
       if (fCanvas) {
         const fCtx = fCanvas.getContext('2d')!;
         fCtx.globalCompositeOperation = 'source-over';
-        fCtx.fillStyle = '#000000'; // Dark fog color
+        fCtx.fillStyle = fogBg; // Dynamic fog color
         fCtx.fillRect(0, 0, fCanvas.width, fCanvas.height);
 
         let lightX = cellPx / 2;

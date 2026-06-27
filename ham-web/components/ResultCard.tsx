@@ -114,7 +114,7 @@ export default function ResultCard({
 
           {mintState === 'idle' && (
             <button className="btn btn-secondary btn-full" onClick={onPlayAgain}>
-              Play Again (no mint)
+              Close & View Leaderboard
             </button>
           )}
         </div>

@@ -14,6 +14,14 @@ depends_on = []
 path = "contracts/ham-maze-v3.clar"
 depends_on = []
 
+[contracts.ham-maze-v4]
+path = "contracts/ham-maze-v4.clar"
+depends_on = []
+
+[contracts.ham-maze-v4-testnet]
+path = "contracts/ham-maze-v4-testnet.clar"
+depends_on = []
+
 [repl]
 costs_version = 2
 parser_version = 2

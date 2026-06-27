@@ -1,7 +1,7 @@
 ;; HAM Maze - Daily Maze Game on Stacks (v3)
 ;; Implements SIP-009 NFT standard, daily prize pool, ECDSA settlement, and tiered payouts
 
-;; (impl-trait 'SP2PABVDX0JZSZZNX5VCRB8PEYW13KDB7QJ7E663B.nft-trait.nft-trait)
+(impl-trait 'SP2PABVDX0JZSZZNX5VCRB8PEYW13KDB7QJ7E663B.nft-trait.nft-trait)
 
 (define-non-fungible-token ham-run uint)
 
@@ -11,8 +11,11 @@
 (define-constant err-already-settled (err u102))
 (define-constant err-not-token-owner (err u103))
 (define-constant err-invalid-signature (err u104))
+(define-constant err-invalid-winners (err u105))
+(define-constant err-paused (err u106))
 
 ;; Variables
+(define-data-var is-paused bool false)
 (define-data-var last-token-id uint u0)
 (define-data-var contract-owner principal tx-sender)
 (define-data-var mint-fee uint u1000000) ;; 1 STX
@@ -92,6 +95,13 @@
   )
 )
 
+(define-public (toggle-pause)
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
+    (ok (var-set is-paused (not (var-get is-paused))))
+  )
+)
+
 (define-public (set-mint-fee (new-fee uint))
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
@@ -109,28 +119,45 @@
   )
 )
 
+(define-data-var protocol-fee-balance uint u0)
+
 (define-public (claim-admin-fees (amount uint))
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) err-owner-only)
+    (asserts! (<= amount (var-get protocol-fee-balance)) (err u400))
+    (var-set protocol-fee-balance (- (var-get protocol-fee-balance) amount))
     (as-contract (stx-transfer? amount tx-sender (var-get contract-owner)))
   )
 )
 
+(define-read-only (get-protocol-fee-balance)
+  (var-get protocol-fee-balance)
+)
+
 ;; Core Game Functions
 
-(define-read-only (hash-run (maze-id uint) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)) (ipfs-uri (string-ascii 256)))
-  (sha256 (unwrap-panic (to-consensus-buff? { maze-id: maze-id, time-ms: time-ms, attempts: attempts, path-svg: path-svg, ipfs-uri: ipfs-uri, minter: tx-sender })))
+(define-read-only (hash-run (maze-id uint) (minter principal) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)) (ipfs-uri (string-ascii 256)))
+  (sha256 (unwrap-panic (to-consensus-buff? {
+    maze-id: maze-id,
+    minter: minter,
+    time-ms: time-ms,
+    attempts: attempts,
+    path-svg: path-svg,
+    ipfs-uri: ipfs-uri
+  })))
 )
 
 ;; Mint a new run result NFT
 (define-public (mint-run (maze-id uint) (time-ms uint) (attempts uint) (path-svg (string-ascii 4096)) (ipfs-uri (string-ascii 256)) (signature (buff 65)))
   (let
     (
-      (msg-hash (hash-run maze-id time-ms attempts path-svg ipfs-uri))
       (token-id (+ (var-get last-token-id) u1))
+      (msg-hash (hash-run maze-id tx-sender time-ms attempts path-svg ipfs-uri))
       (current-pool (get-prize-pool maze-id))
       (fee (var-get mint-fee))
     )
+    (asserts! (not (var-get is-paused)) err-paused)
+    (asserts! (not (is-maze-settled maze-id)) err-already-settled)
     (asserts! (secp256k1-verify msg-hash signature (var-get server-pubkey)) err-invalid-signature)
     (try! (stx-transfer? fee tx-sender (as-contract tx-sender)))
     (try! (nft-mint? ham-run token-id tx-sender))
@@ -157,6 +184,8 @@
     (
       (current-pool (get-prize-pool maze-id))
     )
+    (asserts! (not (var-get is-paused)) err-paused)
+    (asserts! (not (is-maze-settled maze-id)) err-already-settled)
     (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     (map-set maze-prize-pools maze-id (+ current-pool amount))
     (ok true)
@@ -182,8 +211,12 @@
                      u5))))
       (share (/ (* distribution-pool share-percent) u100))
     )
-    (if (and (> share u0) (is-ok (as-contract (stx-transfer? share tx-sender winner))))
-      { rank: (+ rank u1), distribution-pool: distribution-pool }
+    (if (> share u0)
+      (begin
+        ;; unwrap-panic forces a strict reversion if the transfer fails
+        (unwrap-panic (as-contract (stx-transfer? share tx-sender winner)))
+        { rank: (+ rank u1), distribution-pool: distribution-pool }
+      )
       { rank: (+ rank u1), distribution-pool: distribution-pool }
     )
   )
@@ -199,12 +232,17 @@
       (distribution-pool (/ (* current-pool u75) u100))
       (msg-hash (hash-settlement maze-id winners))
     )
+    (asserts! (not (var-get is-paused)) err-paused)
     (asserts! (secp256k1-verify msg-hash signature (var-get server-pubkey)) err-invalid-signature)
     (asserts! (not is-settled) err-already-settled)
+    (asserts! (is-eq (len winners) u10) err-invalid-winners)
     
     ;; Fold over winners to pay them by rank
     (fold pay-winner winners { rank: u1, distribution-pool: distribution-pool })
     
+    (var-set protocol-fee-balance (+ (var-get protocol-fee-balance) (- current-pool distribution-pool)))
+    ;; Prevent double counting of prize pools in the map
+    (map-set maze-prize-pools maze-id u0)
     (map-set maze-settled maze-id true)
     (ok true)
   )

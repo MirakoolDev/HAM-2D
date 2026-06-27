@@ -101,3 +101,35 @@ export async function fetchCampaign(mazeId: number, network: string): Promise<Ca
     return data;
   } catch { return null; }
 }
+
+export interface Profile {
+  address: string;
+  username: string;
+  created_at: string;
+}
+
+export async function fetchProfile(address: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await getClient()
+      .from('ham_profiles')
+      .select('*')
+      .ilike('address', address)
+      .maybeSingle();
+    if (error) return null;
+    return data;
+  } catch { return null; }
+}
+
+export async function upsertProfile(address: string, username: string): Promise<void> {
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !adminKey) throw new Error('Missing Admin Key');
+    
+    const adminClient = createClient(url, adminKey);
+    const { error } = await adminClient
+      .from('ham_profiles')
+      .upsert({ address, username }, { onConflict: 'address' });
+    if (error) console.error('Upsert profile error:', error);
+  } catch (e) { console.error('upsertProfile:', e); }
+}
