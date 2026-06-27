@@ -27,7 +27,7 @@ export default function AdminPage() {
   const [mintFeeStx, setMintFeeStx] = useState(1);
   const [status, setStatus] = useState<React.ReactNode>('');
   const [contractBalance, setContractBalance] = useState<number | null>(null);
-  const [settlementPreview, setSettlementPreview] = useState<{ mazeId: number, winners: string[], signature?: string } | null>(null);
+  const [settlementPreview, setSettlementPreview] = useState<{ mazeId: number, winners: string[], signature?: string, version?: string } | null>(null);
 
   useEffect(() => {
     const deployer = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
@@ -58,7 +58,7 @@ export default function AdminPage() {
       await stacksConnectAPI.openSignatureRequestPopup({
         message: `Authorize Settle/Campaign update for HAM Maze`,
         userSession,
-        onFinish: async ({ signature, publicKey }) => {
+        onFinish: async ({ signature, publicKey }: { signature: string; publicKey: string }) => {
           setStatus("Saving campaign...");
           const res = await fetch('/api/admin/campaign', {
             method: 'POST',
