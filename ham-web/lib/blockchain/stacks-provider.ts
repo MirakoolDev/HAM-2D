@@ -180,6 +180,7 @@ export class StacksGameService implements IBlockchainProvider {
             bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
           postConditionMode: 1, // PostConditionMode.Allow (1)
+          fee: 10000, // Hardcode fee to avoid FeeTooLow error on large SVG payloads
           userSession, // Pass explicit userSession to avoid unauthorized errors
           onFinish: (data: any) => {
             console.log("Mint transaction broadcasted", data);

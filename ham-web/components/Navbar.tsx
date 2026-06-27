@@ -187,7 +187,7 @@ export default function Navbar({ mazeId }: NavbarProps) {
                   gap: '4px',
                   whiteSpace: 'nowrap',
                 }} title="Your run time is boosted by your NFT!">
-                  🚀 -{boosterMultiplier}% TIME
+                  🚀 {boosterMultiplier}% BOOSTED
                 </div>
               )}
               <button
