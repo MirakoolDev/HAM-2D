@@ -7,12 +7,12 @@ export const userSession = new UserSession({ appConfig });
 import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV } from '@stacks/transactions';
 import { IBlockchainProvider, RunData } from './interface';
 
-// The contract was deployed to Testnet (ST... address)
-import { STACKS_TESTNET } from '@stacks/network';
-export const network = STACKS_TESTNET;
+// The contract was deployed to Mainnet (SP... address)
+import { STACKS_MAINNET } from '@stacks/network';
+export const network = STACKS_MAINNET;
 
 // Define the contract address and name
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
 export const CONTRACT_NAME = "ham-maze-v4";
 
 let stacksConnectAPI: any = null;
