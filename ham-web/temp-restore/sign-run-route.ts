@@ -21,7 +21,7 @@ const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY as string;
 
 export async function POST(req: NextRequest) {
   try {
-    const { address, mazeId, timeMs, attempts, pathSvg, chain = "STACKS" } = await req.json();
+    const { address, mazeId, timeMs, attempts, pathSvg } = await req.json();
 
     if (!address || !mazeId || !timeMs) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
