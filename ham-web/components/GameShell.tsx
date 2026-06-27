@@ -167,7 +167,7 @@ export default function GameShell() {
           timeMs: runResult.timeMs,
           txHash: data.txId,
           attempts: runResult.attempts,
-          pathSvg: runResult.pathSvg.slice(0, 4096),
+          pathSvg: runResult.pathSvg,
         })
       });
       setLbRefresh((n) => n + 1);

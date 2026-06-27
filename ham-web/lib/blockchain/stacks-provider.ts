@@ -156,7 +156,7 @@ export class StacksGameService implements IBlockchainProvider {
           mazeId: runData.mazeId,
           timeMs: runData.timeMs,
           attempts: runData.attempts,
-          pathSvg: runData.pathSvg.slice(0, 4096)
+          pathSvg: runData.pathSvg
         }),
       });
       const data = await res.json();
