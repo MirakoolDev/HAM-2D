@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const stacksNet = network.includes('testnet') ? 'testnet' : 'mainnet';
     const address = getAddressFromPublicKey(publicKey, stacksNet);
-    const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+    const adminAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
     if (address !== adminAddress) {
       throw new Error("Wallet is not authorized admin");
     }

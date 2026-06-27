@@ -32,8 +32,8 @@ import { STACKS_MOCKNET, STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network'
 export const network = STACKS_MAINNET;
 
 // Define the contract address and name
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
-export const CONTRACT_NAME = "ham-maze-v4";
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+export const CONTRACT_NAME = process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4";
 
 import { authenticate, openContractCall } from '@stacks/connect';
 
@@ -119,7 +119,8 @@ export class StacksGameService implements IBlockchainProvider {
 
   async getMintFee() {
     try {
-      const url = `https://api.testnet.hiro.so/v2/data_var/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/mint-fee`;
+      const baseUrl = network === STACKS_MAINNET ? 'https://api.hiro.so' : 'https://api.testnet.hiro.so';
+      const url = `${baseUrl}/v2/data_var/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/mint-fee`;
       const response = await fetch(url);
       const json = await response.json();
       if (json.data) {

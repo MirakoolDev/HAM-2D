@@ -5,7 +5,7 @@ import { IBlockchainProvider } from '../lib/blockchain/interface';
 import { StacksGameService } from '../lib/blockchain/stacks-provider';
 
 // Configuration: we are prioritizing Stacks right now
-const NETWORK_ENV = process.env.NEXT_PUBLIC_NETWORK_ENV || "testnet"; // "testnet" or "mainnet"
+const NETWORK_ENV = process.env.NEXT_PUBLIC_NETWORK_ENV || "mainnet"; // "testnet" or "mainnet"
 
 interface GameContextProps {
   provider: IBlockchainProvider;

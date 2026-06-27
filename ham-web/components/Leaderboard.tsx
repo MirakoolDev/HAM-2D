@@ -122,7 +122,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
 
       await openContractCall({
         network: stacksNet,
-        contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+        contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
         contractName: "ham-maze-v4",
         functionName: "settle-maze",
         functionArgs: [

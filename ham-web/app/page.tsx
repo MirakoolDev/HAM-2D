@@ -14,7 +14,7 @@ function PageContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const { address } = useGameChain();
 
-  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
   const isAdminUser = address === adminAddress;
 
   // Forcefully strip any query parameters to ensure Leather wallet authorization passes

@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         i++;
       }
     } else if (top10.length === 0) {
-      const padAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+      const padAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
       while (top10.length < 10) {
         top10.push(padAddress);
       }
