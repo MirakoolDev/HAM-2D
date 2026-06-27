@@ -32,12 +32,12 @@ export default function AdminPage() {
   const [settlementPreview, setSettlementPreview] = useState<{ mazeId: number, winners: string[], signature?: string, version?: string } | null>(null);
 
   useEffect(() => {
-    const deployer = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+    const deployer = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
     
     fetchCallReadOnlyFunction({
       network,
       contractAddress: deployer,
-      contractName: "ham-maze-v4",
+      contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
       functionName: "get-protocol-fee-balance",
       functionArgs: [],
       senderAddress: deployer
@@ -120,8 +120,8 @@ export default function AdminPage() {
       if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet. Please try again.");
       await stacksConnectAPI.openContractCall({
         network,
-        contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
-        contractName: "ham-maze-v4",
+        contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+        contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
         functionName: "settle-maze",
         functionArgs,
         postConditionMode: 1, // Allow contract to transfer STX
@@ -223,8 +223,8 @@ export default function AdminPage() {
                   if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet.");
                   await stacksConnectAPI.openContractCall({
                     network,
-                    contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
-                    contractName: "ham-maze-v4",
+                    contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+                    contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
                     functionName: "set-daily-booster",
                     functionArgs: [
                       uintCV(mazeId),
@@ -270,8 +270,8 @@ export default function AdminPage() {
               if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet.");
               await stacksConnectAPI.openContractCall({
                 network,
-                contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
-                contractName: "ham-maze-v4",
+                contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+                contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
                 functionName: "set-mint-fee",
                 functionArgs: [uintCV(feeMicroStx)],
                 userSession,
@@ -311,8 +311,8 @@ export default function AdminPage() {
               
               await stacksConnectAPI.openContractCall({
                 network,
-                contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
-                contractName: "ham-maze-v4",
+                contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+                contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
                 functionName: "claim-admin-fees",
                 functionArgs: [uintCV(amountMicro)],
                 userSession,
@@ -400,8 +400,8 @@ export default function AdminPage() {
               if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet.");
               await stacksConnectAPI.openContractCall({
                 network,
-                contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
-                contractName: "ham-maze-v4",
+                contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
+                contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
                 functionName: "sponsor-maze",
                 functionArgs: [uintCV(sponsorMazeId), uintCV(amountMicroStx)],
                 postConditionMode: 1,
