@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useGameChain } from './GameProvider';
 
 interface WelcomeModalProps {
@@ -71,36 +72,59 @@ export default function WelcomeModal({ isOpen, onClose, address, profileName, on
         </div>
 
         <div style={contentStyle}>
+          <div style={{ marginBottom: 24, width: '100%', height: 180, position: 'relative', borderRadius: 8, overflow: 'hidden' }}>
+            <Image src="/welcome.jpg" alt="A home is a maze" fill style={{ objectFit: 'cover' }} priority />
+          </div>
           
-          <h2 style={{ fontSize: '24px', margin: '20px 0 10px', textTransform: 'uppercase', fontFamily: 'var(--font-head)' }}>
+          <h2 style={{ fontSize: '20px', margin: '0 0 24px', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', color: 'var(--text)' }}>
             Welcome to Home's A Maze
           </h2>
           
-          <p style={{ fontSize: '14px', color: '#a0aab0', marginBottom: '30px', lineHeight: '1.5', maxWidth: '300px', margin: '0 auto 30px' }}>
-            {!address 
-              ? 'Connect your wallet to start playing, earning daily prizes, and competing on the leaderboard.'
-              : 'You are connected! Claim a unique username to represent yourself on the leaderboard.'}
-          </p>
+          {!address ? (
+            <div style={{ textAlign: 'left', marginBottom: '24px', padding: '0 10px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5', fontFamily: 'var(--font-head)', textAlign: 'center' }}>
+                The first fully on-chain daily maze. Here's how it works:
+              </p>
+              <ul style={{ fontSize: '12px', color: 'var(--text)', lineHeight: '1.6', listStyle: 'none', padding: 0, margin: '0', display: 'flex', flexDirection: 'column', gap: '12px', fontFamily: 'var(--font-head)' }}>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '14px' }}>🏁</span>
+                  <span><strong>Solve the Maze:</strong> <span style={{ color: 'var(--text-muted)' }}>Use your arrow keys or swipe to reach the center target.</span></span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '14px' }}>⏱️</span>
+                  <span><strong>Mint Your Run:</strong> <span style={{ color: 'var(--text-muted)' }}>Record your completion time permanently on Stacks.</span></span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '14px' }}>🏆</span>
+                  <span><strong>Win the Pot:</strong> <span style={{ color: 'var(--text-muted)' }}>The top 10 fastest players each day split the prize pool!</span></span>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.5', fontFamily: 'var(--font-head)' }}>
+              You are connected! Claim a unique username to represent yourself on the leaderboard.
+            </p>
+          )}
 
           {!address ? (
-            <button onClick={handleConnect} style={btnStyle}>
-              Connect Wallet
+            <button onClick={handleConnect} className="btn btn-primary btn-full" style={{ padding: '16px', fontSize: '14px', letterSpacing: '0.1em' }}>
+              CONNECT WALLET
             </button>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 type="text"
-                placeholder="Enter Username"
+                placeholder="ENTER USERNAME"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value.toUpperCase())}
                 maxLength={20}
                 style={inputStyle}
                 disabled={isSaving}
               />
-              <button onClick={handleSave} style={btnStyle} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Claim Username'}
+              <button onClick={handleSave} className="btn btn-primary btn-full" disabled={isSaving} style={{ padding: '16px', fontSize: '14px', letterSpacing: '0.1em' }}>
+                {isSaving ? 'SAVING...' : 'CLAIM USERNAME'}
               </button>
-              {status && <div style={{ color: 'var(--gold)', fontSize: '12px', marginTop: '5px' }}>{status}</div>}
+              {status && <div style={{ color: 'var(--gold)', fontSize: '12px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>{status}</div>}
             </div>
           )}
         </div>
@@ -122,13 +146,13 @@ const overlayStyle: React.CSSProperties = {
 
 const modalStyle: React.CSSProperties = {
   backgroundColor: 'var(--bg-panel)',
-  border: '1px solid var(--border)',
+  border: '3px solid var(--wall)',
   width: '100%',
-  maxWidth: '450px',
-  padding: '20px',
+  maxWidth: '380px',
+  padding: '24px',
   color: 'var(--text)',
   position: 'relative',
-  boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+  boxShadow: 'var(--shadow-lg)',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -136,7 +160,7 @@ const headerStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   color: 'var(--text-muted)',
-  marginBottom: '20px',
+  marginBottom: '24px',
   fontFamily: 'var(--font-mono)',
 };
 
@@ -154,27 +178,14 @@ const contentStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '80%',
-  padding: '12px',
+  width: '100%',
+  padding: '16px',
   backgroundColor: 'var(--bg-dark)',
   border: '1px solid var(--border)',
   color: 'var(--text)',
-  fontSize: '16px',
+  fontSize: '14px',
   textAlign: 'center',
   outline: 'none',
   fontFamily: 'var(--font-mono)',
-};
-
-const btnStyle: React.CSSProperties = {
-  width: '80%',
-  padding: '14px',
-  backgroundColor: 'var(--text)',
-  color: 'var(--bg-dark)',
-  border: 'none',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  textTransform: 'uppercase',
-  transition: 'all 0.2s ease',
-  fontFamily: 'var(--font-mono)',
+  letterSpacing: '0.1em',
 };
