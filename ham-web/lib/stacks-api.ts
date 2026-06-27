@@ -52,8 +52,8 @@ import { hexToCV, cvToValue } from '@stacks/transactions';
 
 export async function getCurrentOwner(tokenId: number, isTestnet: boolean = true): Promise<string | null> {
   const baseUrl = isTestnet ? 'https://api.testnet.hiro.so' : 'https://api.hiro.so';
-  const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
-  const contractName = "ham-maze-v3";
+  const contractAddress = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+  const contractName = process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4";
 
   // Format token_id as a uint CV in hex (e.g. 0x01...01)
   const hexValue = tokenId.toString(16).padStart(32, '0');

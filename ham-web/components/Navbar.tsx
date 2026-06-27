@@ -11,7 +11,7 @@ interface NavbarProps {
   mazeId: number;
 }
 
-const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_WALLET || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_WALLET || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
 
 export default function Navbar({ mazeId }: NavbarProps) {
   const { address, connectWallet, disconnectWallet, provider, networkId } = useGameChain();

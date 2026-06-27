@@ -50,7 +50,7 @@ export default function AdminPage() {
   }, [networkId]);
 
   // Protect route loosely (Contract owner should be the only one checking this)
-  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
   const IS_OWNER = address === adminAddress;
 
   const handleSaveCampaign = async () => {
