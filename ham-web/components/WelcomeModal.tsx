@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useConnect } from '@stacks/connect-react';
+import { useGameChain } from './GameProvider';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface WelcomeModalProps {
 }
 
 export default function WelcomeModal({ isOpen, onClose, address, profileName, onProfileUpdated }: WelcomeModalProps) {
-  const { doOpenAuth } = useConnect();
+  const { connectWallet } = useGameChain();
   const [username, setUsername] = useState('');
   const [status, setStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -27,7 +27,8 @@ export default function WelcomeModal({ isOpen, onClose, address, profileName, on
   if (!isOpen) return null;
 
   const handleConnect = () => {
-    doOpenAuth(false);
+    connectWallet();
+    onClose();
   };
 
   const handleSave = async () => {
