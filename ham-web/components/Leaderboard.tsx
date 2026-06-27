@@ -20,18 +20,32 @@ function formatTime(ms: number) {
   return `${s}.${centis.toString().padStart(2, '0')}s`;
 }
 
-const PODIUM_SHARE = [35, 20, 10]; // % of prize pool for 1st/2nd/3rd
-const TAIL_TOTAL = 35;             // % split equally among 4th–10th (5% each)
+const PODIUM_SHARE = [0.35, 0.20, 0.10]; // % of prize pool for 1st/2nd/3rd
+const TAIL_SHARE = 0.05;             // 5% each for 4th-10th
 
-function prizeShare(rank: number, totalWinners: number): string {
-  if (rank === 1) return `${PODIUM_SHARE[0]}%`;
-  if (rank === 2) return `${PODIUM_SHARE[1]}%`;
-  if (rank === 3) return `${PODIUM_SHARE[2]}%`;
-  if (rank <= totalWinners) {
-    const tailN = Math.max(totalWinners - 3, 1);
-    return `${(TAIL_TOTAL / tailN).toFixed(0)}%`;
+function getPayoutInfo(rank: number, numPlayers: number, prizePoolStx: number): { stx: string, pct: string } {
+  const distPool = prizePoolStx * 0.75;
+  const slotPercentages = [0.35, 0.20, 0.10, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05];
+  
+  let myTotalPct = 0;
+  const myIndex = rank - 1;
+  const safeNumPlayers = Math.max(numPlayers, 1);
+  
+  if (myIndex < 10) {
+    for (let slot = 0; slot < 10; slot++) {
+      if (slot % safeNumPlayers === myIndex) {
+        myTotalPct += slotPercentages[slot];
+      }
+    }
   }
-  return '—';
+  
+  if (myTotalPct === 0) return { stx: '—', pct: '—' };
+  
+  const payout = distPool * myTotalPct;
+  const pctString = `${Math.round(myTotalPct * 100)}%`;
+  
+  if (prizePoolStx === 0) return { stx: '0 STX', pct: pctString };
+  return { stx: `${payout % 1 === 0 ? payout : payout.toFixed(2)} STX`, pct: pctString };
 }
 
 export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger = 0 }: LeaderboardProps) {
@@ -44,6 +58,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
   const { networkId, provider } = useGameChain();
 
   const [isSettled, setIsSettled] = useState(true);
+  const [prizePool, setPrizePool] = useState<number>(0);
   const [settlePreview, setSettlePreview] = useState<{ winners: string[], signature: string } | null>(null);
   const [settlingStatus, setSettlingStatus] = useState<React.ReactNode>('');
 
@@ -51,10 +66,14 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
     let cancelled = false;
     setLoading(true);
 
-    // Check if settled on-chain
+    // Check if settled on-chain and fetch prize pool
     provider.isMazeSettled(mazeId).then(settled => {
       if (!cancelled) setIsSettled(settled);
     });
+    
+    provider.getPrizePool(mazeId).then(pool => {
+      if (!cancelled) setPrizePool(parseInt(pool) / 1000000);
+    }).catch(() => {});
 
     fetch(`/api/leaderboard?mazeId=${mazeId}&network=${networkId}`)
       .then(res => res.json())
@@ -160,7 +179,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '24px minmax(0,1fr) 40px 60px 16px',
+          gridTemplateColumns: '24px minmax(0,1fr) 50px 50px 70px 16px',
           gap: 8,
           fontSize: 10,
           fontWeight: 700,
@@ -177,6 +196,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
         <span>Player</span>
         <span style={{ textAlign: 'right' }}>Time</span>
         <span style={{ textAlign: 'right' }}>Score</span>
+        <span style={{ textAlign: 'right', color: 'var(--gold)' }}>Payout</span>
         <span></span>
       </div>
 
@@ -204,7 +224,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
               className={`lb-row${isMe ? ' me' : ''}`}
               style={{
                 display: 'grid',
-                gridTemplateColumns: '24px minmax(0,1fr) 40px 60px 16px',
+                gridTemplateColumns: '24px minmax(0,1fr) 50px 50px 70px 16px',
                 gap: 8,
                 opacity: inPrizes ? 1 : 0.5,
                 cursor: 'pointer',
@@ -218,6 +238,16 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
               </span>
               <span className="lb-time" style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{formatTime(run.time_ms)}</span>
               <span className="lb-time" style={{ textAlign: 'right', fontWeight: 700 }}>{run.score.toLocaleString()}</span>
+              
+              {inPrizes ? (
+                <span style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)' }}>{getPayoutInfo(rank, runs.length, prizePool).stx}</span>
+                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{getPayoutInfo(rank, runs.length, prizePool).pct}</span>
+                </span>
+              ) : (
+                <span style={{ textAlign: 'right', color: 'var(--text-muted)' }}>—</span>
+              )}
+
               <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {run.history && run.history.length > 1 ? (isExpanded ? '▼' : '▶') : ''}
               </span>

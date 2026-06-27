@@ -25,6 +25,8 @@ export default function AdminPage() {
   const [multiplier, setMultiplier] = useState(10);
   const [imageUrl, setImageUrl] = useState('');
   const [mintFeeStx, setMintFeeStx] = useState(1);
+  const [sponsorAmount, setSponsorAmount] = useState(10);
+  const [sponsorMazeId, setSponsorMazeId] = useState(getTodaySeed() + 1);
   const [status, setStatus] = useState<React.ReactNode>('');
   const [contractBalance, setContractBalance] = useState<number | null>(null);
   const [settlementPreview, setSettlementPreview] = useState<{ mazeId: number, winners: string[], signature?: string, version?: string } | null>(null);
@@ -369,6 +371,54 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Sponsor/Rollover Card */}
+        <div className="panel" style={{ borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+          <h3 className="panel-title" style={{ color: 'var(--accent)' }}>Rollover Pot (Sponsor)</h3>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 24 }}>
+            Manually inject STX directly from your admin wallet into any maze's prize pool. Use this to roll over unused funds from yesterday to tomorrow's pot.
+          </p>
+
+          <div style={{ flex: 1 }} />
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 16 }}>
+            Target Maze ID
+            <input type="number" value={sponsorMazeId} onChange={e => setSponsorMazeId(parseInt(e.target.value))} style={{ padding: '10px 12px', background: 'var(--bg-dark)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)' }} />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 16 }}>
+            Sponsor Amount (STX)
+            <input type="number" step="0.1" value={sponsorAmount} onChange={e => setSponsorAmount(parseFloat(e.target.value))} style={{ padding: '10px 12px', background: 'var(--bg-dark)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)' }} />
+          </label>
+
+          <button onClick={async () => {
+            if (!address) return alert("Connect wallet");
+            try {
+              const amountMicroStx = Math.floor(sponsorAmount * 1000000);
+              if (amountMicroStx <= 0) return alert("Enter valid amount");
+              if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet.");
+              await stacksConnectAPI.openContractCall({
+                network,
+                contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1",
+                contractName: "ham-maze-v4",
+                functionName: "sponsor-maze",
+                functionArgs: [uintCV(sponsorMazeId), uintCV(amountMicroStx)],
+                postConditionMode: 1,
+                userSession,
+                onFinish: (d: any) => {
+                  const chainQuery = networkId.includes('testnet') ? 'testnet' : 'mainnet';
+                  setStatus(
+                    <span>
+                      Sponsorship Broadcasted! Tx: <a href={`https://explorer.hiro.so/txid/${d.txId}?chain=${chainQuery}`} target="_blank" rel="noreferrer" style={{ color: 'var(--goal)', textDecoration: 'underline', wordBreak: 'break-all' }}>{d.txId.slice(0, 8)}...{d.txId.slice(-6)}</a>
+                    </span>
+                  );
+                }
+              });
+            } catch (e: any) { setStatus("Error: " + e.message); }
+          }} className="btn btn-primary" style={{ padding: 12 }}>
+            🎁 Sponsor Pot
+          </button>
         </div>
 
       </div>

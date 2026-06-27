@@ -14,7 +14,7 @@ export default function ClaimDropdown() {
 
   useEffect(() => {
     if (address) {
-      fetchUserMazeIds(address).then(setMazeIds);
+      fetchUserMazeIds(address, 'mainnet').then(setMazeIds);
     } else {
       setMazeIds([]);
     }

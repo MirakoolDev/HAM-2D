@@ -1,5 +1,5 @@
 import { AppConfig, UserSession } from '@stacks/connect';
-import { STACKS_MOCKNET } from '@stacks/network';
+import { STACKS_MOCKNET, STACKS_TESTNET } from '@stacks/network';
 
 const appConfig = new AppConfig(['store_write']);
 export const userSession = new UserSession({ appConfig });
@@ -159,7 +159,7 @@ export class StacksGameService implements IBlockchainProvider {
           ],
           postConditionMode: 1, // PostConditionMode.Allow (1)
           userSession, // Pass explicit userSession to avoid unauthorized errors
-          onFinish: (data) => {
+          onFinish: (data: any) => {
             console.log("Mint transaction broadcasted", data);
             resolve({ txId: data.txId });
           },
@@ -210,7 +210,7 @@ export class StacksGameService implements IBlockchainProvider {
           ],
           postConditionMode: 1, // Allow contract to transfer STX
           userSession,
-          onFinish: (data) => {
+          onFinish: (data: any) => {
             console.log("Settle transaction broadcasted", data);
             resolve({ txId: data.txId });
           },

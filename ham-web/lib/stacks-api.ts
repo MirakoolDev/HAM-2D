@@ -36,7 +36,7 @@ export async function checkHasToken(address: string, contractAddress: string, is
     // Check fungible_tokens
     const ftBalances = data.fungible_tokens || {};
     for (const key of Object.keys(ftBalances)) {
-      if (key.includes(contractAddress) && BigInt(ftBalances[key].balance) > 0n) {
+      if (key.includes(contractAddress) && BigInt(ftBalances[key].balance) > BigInt(0)) {
         return true;
       }
     }

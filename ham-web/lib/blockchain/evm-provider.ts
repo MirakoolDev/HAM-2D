@@ -33,4 +33,12 @@ export class EvmGameService implements IBlockchainProvider {
     console.log("Settling on EVM", mazeId);
     return { txId: "0x456..." };
   }
+
+  async isMazeSettled(mazeId: number) {
+    return false;
+  }
+
+  async getMintFee() {
+    return "0";
+  }
 }

@@ -18,6 +18,12 @@ export interface IBlockchainProvider {
   /** Get the total prize pool for a given mazeId (in the native token, e.g., STX or ETH as a string) */
   getPrizePool: (mazeId: number) => Promise<string>;
 
+  /** Check if a maze has been settled */
+  isMazeSettled: (mazeId: number) => Promise<boolean>;
+
+  /** Get the current mint fee */
+  getMintFee: () => Promise<string>;
+
   /** Get the leaderboard data for a given mazeId */
   getLeaderboard: (mazeId: number) => Promise<any[]>;
 

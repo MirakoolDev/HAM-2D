@@ -67,6 +67,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (top10.length > 0 && top10.length < 10) {
+      // The user requested that if there are fewer than 10 players, the remaining 5% prize slots
+      // should be distributed amongst the players who actually played, rather than the admin pot.
+      // We do this by simply cycling through the existing players to fill the 10 slots!
+      let i = 0;
+      const initialLength = top10.length;
+      while (top10.length < 10) {
+        top10.push(top10[i % initialLength]);
+        i++;
+      }
+    } else if (top10.length === 0) {
+      const padAddress = process.env.NEXT_PUBLIC_ADMIN_WALLET || process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+      while (top10.length < 10) {
+        top10.push(padAddress);
+      }
+    }
+
     const privateKeyHex = process.env.SIGNER_PRIVATE_KEY;
     if (!privateKeyHex) {
       return NextResponse.json({ error: 'Server misconfigured: missing SIGNER_PRIVATE_KEY' }, { status: 500 });
