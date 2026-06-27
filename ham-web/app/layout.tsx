@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="talentapp:project_verification" content="6e8993c705a29bcb505abf5940952e25b2592e8694564b9f3ca29eab15595b55e7e88d8130c804c5323d3b2c1fdd43f9dbb8e048a431b1704625bf5b29b03c5c" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
