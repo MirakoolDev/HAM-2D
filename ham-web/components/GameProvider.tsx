@@ -19,11 +19,8 @@ interface GameContextProps {
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
 
-import { useConnect } from '@stacks/connect-react';
-
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
-  const { authenticate } = useConnect();
 
   // Determine the network string for Supabase leaderboard partitioning
   const networkId = ACTIVE_CHAIN === "STACKS" 
@@ -46,16 +43,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const connectWallet = async () => {
     try {
-      if (ACTIVE_CHAIN === "STACKS") {
-        authenticate({
-          onFinish: () => {
-            setAddress(provider.getAddress());
-          },
-        });
-      } else {
-        await provider.connectWallet();
-        setAddress(provider.getAddress());
-      }
+      await provider.connectWallet();
+      setAddress(provider.getAddress());
     } catch (error) {
       console.error("Wallet connection failed:", error);
     }
