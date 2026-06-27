@@ -175,7 +175,7 @@ export class StacksGameService implements IBlockchainProvider {
             uintCV(runData.mazeId),
             uintCV(runData.timeMs),
             uintCV(runData.attempts),
-            stringAsciiCV(runData.pathSvg.slice(0, 4096)),
+            stringAsciiCV(runData.pathSvg.slice(0, 2048)),
             stringAsciiCV(data.ipfsUri),
             bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],

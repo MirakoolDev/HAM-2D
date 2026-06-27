@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       'minter': principalCV(address),
       'time-ms': uintCV(timeMs),
       'attempts': uintCV(attempts || 1),
-      'path-svg': stringAsciiCV((pathSvg || "").slice(0, 4096)),
+      'path-svg': stringAsciiCV((pathSvg || "").slice(0, 2048)),
       'ipfs-uri': stringAsciiCV(ipfsUri)
     });
 
