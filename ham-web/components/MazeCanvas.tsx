@@ -98,12 +98,26 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
       if (i % 2 === 0) ctx.fillRect(pad + i * stripeW, 0, stripeW, 5);
     }
 
-    // Goal star
+    // Directional Arrow
     ctx.fillStyle = fgColor;
-    ctx.font = `${cellPx * 0.45}px serif`;
+    ctx.font = `bold ${cellPx * 0.4}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('★', g.x, g.y);
+    ctx.fillText('↓', cellPx / 2, cellPx / 2);
+
+    // Goal home icon (Custom drawn to perfectly inherit fgColor)
+    const hSize = cellPx * 0.25;
+    ctx.fillStyle = fgColor;
+    ctx.beginPath();
+    ctx.moveTo(g.x, g.y - hSize * 1.2); // Top of roof
+    ctx.lineTo(g.x + hSize * 1.2, g.y); // Right eaves
+    ctx.lineTo(g.x + hSize * 0.8, g.y); // Right inner roof
+    ctx.lineTo(g.x + hSize * 0.8, g.y + hSize); // Right bottom
+    ctx.lineTo(g.x - hSize * 0.8, g.y + hSize); // Left bottom
+    ctx.lineTo(g.x - hSize * 0.8, g.y); // Left inner roof
+    ctx.lineTo(g.x - hSize * 1.2, g.y); // Left eaves
+    ctx.closePath();
+    ctx.fill();
 
     // Player path
     if (pathRef.current.length > 1) {
@@ -163,6 +177,8 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
 
         const radius = cellPx * 2.8; // Visibility radius
         fCtx.globalCompositeOperation = 'destination-out';
+        
+        // Player Light
         const grad = fCtx.createRadialGradient(lightX, lightY, radius * 0.1, lightX, lightY, radius);
         grad.addColorStop(0, 'rgba(0,0,0,1)');
         grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -170,6 +186,19 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         fCtx.fillStyle = grad;
         fCtx.beginPath();
         fCtx.arc(lightX, lightY, radius, 0, Math.PI * 2);
+        fCtx.fill();
+
+        // Goal Light (shining through fog)
+        const gx = Math.floor(maze.length / 2) * cellPx + cellPx / 2;
+        const gy = Math.floor(maze[0].length / 2) * cellPx + cellPx / 2;
+        const goalRadius = cellPx * 1.5;
+        const goalGrad = fCtx.createRadialGradient(gx, gy, 0, gx, gy, goalRadius);
+        goalGrad.addColorStop(0, 'rgba(0,0,0,0.8)');
+        goalGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        fCtx.fillStyle = goalGrad;
+        fCtx.beginPath();
+        fCtx.arc(gx, gy, goalRadius, 0, Math.PI * 2);
         fCtx.fill();
 
         ctx.drawImage(fCanvas, 0, 0);

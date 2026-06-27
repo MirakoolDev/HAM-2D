@@ -88,7 +88,7 @@ export default function WelcomeModal({ isOpen, onClose, address, profileName, on
               <ul style={{ fontSize: '12px', color: 'var(--text)', lineHeight: '1.6', listStyle: 'none', padding: 0, margin: '0', display: 'flex', flexDirection: 'column', gap: '12px', fontFamily: 'var(--font-head)' }}>
                 <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <span style={{ fontSize: '14px' }}>🏁</span>
-                  <span><strong>Solve the Maze:</strong> <span style={{ color: 'var(--text-muted)' }}>Use your arrow keys or swipe to reach the center target.</span></span>
+                  <span><strong>Solve the Maze:</strong> <span style={{ color: 'var(--text-muted)' }}>Enter the start arrow (↓) to begin. Navigate to the center home icon without touching walls.</span></span>
                 </li>
                 <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <span style={{ fontSize: '14px' }}>⏱️</span>

@@ -11,16 +11,18 @@ interface NavbarProps {
   mazeId: number;
 }
 
-const ADMIN_ADDRESS = "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
+const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_WALLET || "ST1K96254R3KP5TRT5N2X64FB12VMHX6MYT2VB8B1";
 
 export default function Navbar({ mazeId }: NavbarProps) {
-  const { address, connectWallet, disconnectWallet, provider } = useGameChain();
+  const { address, connectWallet, disconnectWallet, provider, networkId } = useGameChain();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [prizePool, setPrizePool] = useState<number>(0);
   const [isSettled, setIsSettled] = useState(false);
   const [mintFee, setMintFee] = useState(1);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isBoosted, setIsBoosted] = useState(false);
+  const [boosterMultiplier, setBoosterMultiplier] = useState(0);
   const router = useRouter();
 
   const isPastMaze = mazeId < getTodaySeed();
@@ -31,6 +33,7 @@ export default function Navbar({ mazeId }: NavbarProps) {
       if (!address) {
         setProfileName(null);
         setShowWelcome(true);
+        setIsBoosted(false);
         return;
       }
       try {
@@ -49,6 +52,25 @@ export default function Navbar({ mazeId }: NavbarProps) {
     }
     checkProfile();
   }, [address]);
+
+  useEffect(() => {
+    async function checkBoost() {
+      if (!address) return;
+      try {
+        const res = await fetch(`/api/booster?address=${address}&mazeId=${mazeId}&network=${networkId}`);
+        const data = await res.json();
+        if (data.hasBooster) {
+          setIsBoosted(true);
+          setBoosterMultiplier(data.multiplier);
+        } else {
+          setIsBoosted(false);
+        }
+      } catch (e) {
+        console.error('Failed to fetch booster status', e);
+      }
+    }
+    checkBoost();
+  }, [address, mazeId, networkId]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -149,7 +171,25 @@ export default function Navbar({ mazeId }: NavbarProps) {
 
         <div style={{ position: 'relative' }}>
           {address ? (
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isBoosted && (
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.15)',
+                  border: '1px solid rgba(255, 215, 0, 0.3)',
+                  color: 'var(--gold)',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  whiteSpace: 'nowrap',
+                }} title="Your run time is boosted by your NFT!">
+                  🚀 -{boosterMultiplier}% TIME
+                </div>
+              )}
               <button
                 className="wallet-btn connected"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -209,7 +249,7 @@ export default function Navbar({ mazeId }: NavbarProps) {
                   </button>
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <button className="wallet-btn" onClick={connectWallet}>
               Connect Wallet

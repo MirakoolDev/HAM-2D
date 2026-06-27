@@ -6,9 +6,7 @@ import Leaderboard from '@/components/Leaderboard';
 import Navbar from '@/components/Navbar';
 import ResultCard from '@/components/ResultCard';
 import { getTodaySeed, addDaysToSeed } from '@/lib/maze';
-import { useMiniBlockMints } from '@/lib/miniblock';
 import { useGameChain } from '@/components/GameProvider';
-import { HAM_MAZE_ADDRESS } from '@/lib/contract';
 import Image from 'next/image';
 
 const MazeCanvas = dynamicImport(() => import('@/components/MazeCanvas'), { ssr: false });
@@ -143,10 +141,6 @@ export default function GameShell() {
     setGameKey(k => k + 1);
   };
 
-  useMiniBlockMints(HAM_MAZE_ADDRESS, (_event) => {
-    setLbRefresh((n) => n + 1);
-  });
-
   const handleSuccess = useCallback((timeMs: number, pathSvg: string, snapshot: string, attempts: number = 1) => {
     setRunResult({ timeMs, pathSvg, snapshot, attempts });
   }, []);
@@ -234,7 +228,7 @@ export default function GameShell() {
           <div>
             <div className="panel-title">🕹️ How to Play</div>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
-              Move your cursor into the <strong style={{ color: 'var(--text)' }}>start zone</strong> to begin. Navigate the path to the finish without touching the walls.
+              Move your cursor over the <strong style={{ color: 'var(--text)' }}>start arrow (↓)</strong> to begin. Navigate the path to the <strong style={{ color: 'var(--text)' }}>home icon</strong> without touching the walls.
               The faster you solve it, the higher your score. Extra attempts incur a small penalty.
             </p>
           </div>

@@ -6,6 +6,9 @@ export interface RunData {
 }
 
 export interface IBlockchainProvider {
+  /** Initialize the provider, e.g. handle pending sign in */
+  init?: () => Promise<void>;
+
   /** Connect the user's wallet */
   connectWallet: () => Promise<void>;
 

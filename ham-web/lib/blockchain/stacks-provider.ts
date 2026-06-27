@@ -38,6 +38,12 @@ export const CONTRACT_NAME = "ham-maze-v4";
 import { authenticate, openContractCall } from '@stacks/connect';
 
 export class StacksGameService implements IBlockchainProvider {
+  async init() {
+    if (userSession.isSignInPending()) {
+      await userSession.handlePendingSignIn();
+    }
+  }
+
   async connectWallet() {
     return new Promise<void>(async (resolve, reject) => {
       authenticate({
@@ -67,6 +73,9 @@ export class StacksGameService implements IBlockchainProvider {
     if (userSession.isUserSignedIn()) {
       const userData = userSession.loadUserData();
       // Use testnet address if network is testnet/mocknet, else mainnet
+      if (network === STACKS_MAINNET) {
+        return userData.profile.stxAddress.mainnet;
+      }
       return userData.profile.stxAddress.testnet;
     }
     return null;
@@ -146,8 +155,7 @@ export class StacksGameService implements IBlockchainProvider {
           mazeId: runData.mazeId,
           timeMs: runData.timeMs,
           attempts: runData.attempts,
-          pathSvg: runData.pathSvg.slice(0, 4096),
-          chain: "STACKS"
+          pathSvg: runData.pathSvg.slice(0, 4096)
         }),
       });
       const data = await res.json();

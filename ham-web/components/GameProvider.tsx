@@ -3,10 +3,8 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { IBlockchainProvider } from '../lib/blockchain/interface';
 import { StacksGameService } from '../lib/blockchain/stacks-provider';
-import { EvmGameService } from '../lib/blockchain/evm-provider';
 
 // Configuration: we are prioritizing Stacks right now
-const ACTIVE_CHAIN = process.env.NEXT_PUBLIC_ACTIVE_CHAIN || "STACKS"; // "STACKS" or "EVM"
 const NETWORK_ENV = process.env.NEXT_PUBLIC_NETWORK_ENV || "testnet"; // "testnet" or "mainnet"
 
 interface GameContextProps {
@@ -23,22 +21,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
 
   // Determine the network string for Supabase leaderboard partitioning
-  const networkId = ACTIVE_CHAIN === "STACKS" 
-    ? `stacks-${NETWORK_ENV}` 
-    : (process.env.NEXT_PUBLIC_EVM_NETWORK || "base-sepolia");
+  const networkId = `stacks-${NETWORK_ENV}`;
 
   // Initialize the correct provider based on configuration
   const provider = useMemo(() => {
-    return ACTIVE_CHAIN === "EVM" ? new EvmGameService() : new StacksGameService();
+    return new StacksGameService();
   }, []);
 
   // Sync the address initially (if previously connected)
   useEffect(() => {
-    const checkAddress = () => {
+    const initAndCheck = async () => {
+      if (provider.init) {
+        await provider.init();
+      }
       const addr = provider.getAddress();
       setAddress(addr);
     };
-    checkAddress();
+    initAndCheck();
   }, [provider]);
 
   const connectWallet = async () => {
