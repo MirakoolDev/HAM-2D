@@ -4,9 +4,11 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import dynamicImport from 'next/dynamic';
 import Leaderboard from '@/components/Leaderboard';
 import Navbar from '@/components/Navbar';
+import MazeSelector from './MazeSelector';
 import ResultCard from '@/components/ResultCard';
 import { getTodaySeed, addDaysToSeed } from '@/lib/maze';
 import { useGameChain } from '@/components/GameProvider';
+import { Globe, Send, Rocket, Gamepad2, Coins } from 'lucide-react';
 import Image from 'next/image';
 
 const MazeCanvas = dynamicImport(() => import('@/components/MazeCanvas'), { ssr: false });
@@ -203,6 +205,19 @@ export default function GameShell() {
             VIEW ONLY — past maze
           </span>
         )}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <a href="https://miracleotugo.art/" target="_blank" rel="noreferrer" title="Website" className="sq-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <Globe size={16} />
+          </a>
+          <a href="https://x.com/MiracleOtugo" target="_blank" rel="noreferrer" title="Twitter (X)" className="sq-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a href="https://t.me/playHAM3d" target="_blank" rel="noreferrer" title="Telegram" className="sq-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', textDecoration: 'none' }}>
+            <Send size={16} />
+          </a>
+        </div>
       </div>
 
       <main className="main-grid" style={{ flex: 1, minHeight: 0 }}>
@@ -222,11 +237,13 @@ export default function GameShell() {
         </div>
 
         {/* ── RIGHT: Info Panel ── */}
-        <div className="panel right-panel" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="panel right-panel" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* How to Play */}
           <div>
-            <div className="panel-title">🕹️ How to Play</div>
+            <div className="panel-title" style={{ display: 'flex', alignItems: 'center' }}>
+              <Gamepad2 size={18} style={{ marginRight: 8, color: 'var(--text-muted)' }} /> How to Play
+            </div>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>
               Move your cursor over the <strong style={{ color: 'var(--text)' }}>start arrow (↓)</strong> to begin. Navigate the path to the <strong style={{ color: 'var(--text)' }}>home icon</strong> without touching the walls.
               The faster you solve it, the higher your score. Extra attempts incur a small penalty.
@@ -237,7 +254,9 @@ export default function GameShell() {
 
           {/* Prize Breakdown */}
           <div>
-            <div className="panel-title">💰 Prize Breakdown</div>
+            <div className="panel-title" style={{ display: 'flex', alignItems: 'center' }}>
+              <Coins size={18} style={{ marginRight: 8, color: 'var(--text-muted)' }} /> Prize Breakdown
+            </div>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
               Top 10 fastest players split the daily pot:
             </p>
@@ -267,7 +286,9 @@ export default function GameShell() {
             <>
               <div style={{ height: '1px', background: 'var(--border)' }} />
               <div>
-                <div className="panel-title" style={{ color: 'var(--accent)' }}>🚀 Active Booster</div>
+                <div className="panel-title" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
+                  <Rocket size={18} style={{ marginRight: 8 }} /> Active Booster
+                </div>
                 {campaign.image_url && (
                   <div style={{
                     width: '100%',
@@ -286,20 +307,13 @@ export default function GameShell() {
                     />
                   </div>
                 )}
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.5 }}>
                   {campaign.description || `Hold the NFT to get a score boost.`}
                 </p>
                 <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '6px 12px',
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: 700,
-                  color: 'var(--text)',
+                  color: 'var(--accent)',
                   fontFamily: 'var(--font-mono)',
                 }}>
                   +{campaign.multiplier}% Score Boost

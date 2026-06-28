@@ -24,7 +24,7 @@ export const userSession = new Proxy({}, {
   }
 }) as UserSessionType;
 
-import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV } from '@stacks/transactions';
+import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV, Pc } from '@stacks/transactions';
 import { IBlockchainProvider, RunData } from './interface';
 import { STACKS_MOCKNET, STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 
@@ -164,7 +164,11 @@ export class StacksGameService implements IBlockchainProvider {
         throw new Error(data.error || "Failed to fetch signature");
       }
 
-      // 2. Broadcast transaction with signature
+      // 2. Prepare exact STX transfer post-condition
+      const feeAmount = await this.getMintFee();
+      const postCondition = Pc.principal(address).willSendEq(feeAmount).ustx();
+
+      // 3. Broadcast transaction with signature
       return new Promise<{ txId: string }>((resolve, reject) => {
         openContractCall({
           network,
@@ -179,7 +183,8 @@ export class StacksGameService implements IBlockchainProvider {
             stringAsciiCV(data.ipfsUri),
             bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
-          postConditionMode: 1, // PostConditionMode.Allow (1)
+          postConditionMode: 0, // PostConditionMode.Deny (0) - strict post-conditions
+          postConditions: [postCondition],
           fee: 10000, // Hardcode fee to avoid FeeTooLow error on large SVG payloads
           userSession, // Pass explicit userSession to avoid unauthorized errors
           onFinish: (data: any) => {

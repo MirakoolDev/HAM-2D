@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getTodaySeed } from '@/lib/maze';
 import { useGameChain } from '@/components/GameProvider';
+import { Trophy, Medal, User, Rocket } from 'lucide-react';
 
 interface LeaderboardProps {
   mazeId: number;
@@ -155,9 +156,9 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
   };
 
   const rankEmoji = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    if (rank === 1) return <Medal size={14} color="#ffd700" />;
+    if (rank === 2) return <Medal size={14} color="#c0c0c0" />;
+    if (rank === 3) return <Medal size={14} color="#cd7f32" />;
     return `#${rank}`;
   };
 
@@ -166,7 +167,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
       <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="live-dot" style={{ opacity: pulsing ? 1 : 0.4 }} />
-          Leaderboard 🏆
+          Leaderboard <Trophy size={16} style={{ color: 'var(--text-muted)' }} />
         </div>
         {campaign && (
           <div style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
@@ -176,28 +177,12 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
       </div>
 
       {/* Header */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '24px minmax(0,1fr) 50px 50px 70px 16px',
-          gap: 8,
-          fontSize: 10,
-          fontWeight: 700,
-          fontFamily: 'var(--font-mono)',
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          color: 'var(--text-muted)',
-          padding: '6px 10px 10px',
-          borderBottom: '1px solid var(--border)',
-          marginBottom: 4,
-        }}
-      >
+      <div className="lb-header">
         <span>#</span>
-        <span>Player</span>
-        <span style={{ textAlign: 'right' }}>Time</span>
-        <span style={{ textAlign: 'right' }}>Score</span>
-        <span style={{ textAlign: 'right', color: 'var(--gold)' }}>Payout</span>
-        <span></span>
+        <span className="lb-header-player">Player</span>
+        <span className="lb-header-time" style={{ textAlign: 'right' }}>Time</span>
+        <span className="lb-header-payout" style={{ textAlign: 'right', color: 'var(--gold)' }}>Payout</span>
+        <span className="lb-header-arrow"></span>
       </div>
 
       {loading && (
@@ -208,7 +193,7 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
 
       {!loading && runs.length === 0 && (
         <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
-          No runs yet today.<br />Be the first! 🏁
+          No runs yet today.<br />Be the first!
         </div>
       )}
 
@@ -223,31 +208,27 @@ export default function Leaderboard({ mazeId, connectedAddress, refreshTrigger =
             <div
               className={`lb-row${isMe ? ' me' : ''}`}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '24px minmax(0,1fr) 50px 50px 70px 16px',
-                gap: 8,
                 opacity: inPrizes ? 1 : 0.5,
                 cursor: 'pointer',
               }}
               onClick={() => setExpandedRow(isExpanded ? null : run.address)}
             >
               <span className={`lb-rank ${rankClass(rank)}`}>{rankEmoji(rank)}</span>
-              <span className="lb-addr" title={run.address}>
-                {isMe ? '👤 You' : (run.username || shortenAddr(run.address))}
-                {run.hasBooster && <span style={{ color: 'var(--accent)', marginLeft: 4 }}>🚀</span>}
+              <span className="lb-addr" title={run.address} style={{ display: 'flex', alignItems: 'center' }}>
+                {isMe ? <><User size={12} style={{ marginRight: 4 }} /> You</> : (run.username || shortenAddr(run.address))}
+                {run.hasBooster && <Rocket size={12} style={{ color: 'var(--accent)', marginLeft: 4 }} />}
               </span>
-              <span className="lb-time" style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{formatTime(run.time_ms)}</span>
-              <span className="lb-time" style={{ textAlign: 'right', fontWeight: 700 }}>{run.score.toLocaleString()}</span>
+              <span className="lb-time lb-time-col" style={{ textAlign: 'right', color: 'var(--text-muted)' }}>{formatTime(run.time_ms)}</span>
               
               {inPrizes ? (
-                <span style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <span className="lb-payout-col" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)' }}>{getPayoutInfo(rank, runs.length, prizePool).stx}</span>
                 </span>
               ) : (
-                <span style={{ textAlign: 'right', color: 'var(--text-muted)' }}>—</span>
+                <span className="lb-payout-col" style={{ textAlign: 'right', color: 'var(--text-muted)' }}>—</span>
               )}
 
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="lb-arrow-col" style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {run.history && run.history.length > 1 ? (isExpanded ? '▼' : '▶') : ''}
               </span>
             </div>

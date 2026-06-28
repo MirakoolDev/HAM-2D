@@ -60,20 +60,25 @@ export async function GET(req: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
+      
+      const orQuery = Array.from(addressesToFetch)
+        .map(addr => `address.ilike.${addr}`)
+        .join(',');
+
       const { data: profiles } = await supabase
         .from('ham_profiles')
         .select('address, username')
-        .in('address', Array.from(addressesToFetch));
+        .or(orQuery);
       
       if (profiles) {
-        profiles.forEach((p: any) => profileMap.set(p.address, p.username));
+        profiles.forEach((p: any) => profileMap.set(p.address.toLowerCase(), p.username));
       }
     }
 
     // Convert map to array and sort by score descending
     const finalLeaderboard = Array.from(addressToBestRun.values()).map(run => ({
       ...run,
-      username: profileMap.get(run.address) || null
+      username: profileMap.get(run.address.toLowerCase()) || null
     })).sort((a, b) => b.score - a.score);
 
     // Assign final ranks

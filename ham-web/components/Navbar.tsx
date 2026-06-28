@@ -6,6 +6,7 @@ import { getTodaySeed } from '@/lib/maze';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import WelcomeModal from './WelcomeModal';
+import { Moon, Rocket } from 'lucide-react';
 
 interface NavbarProps {
   mazeId: number;
@@ -102,17 +103,7 @@ export default function Navbar({ mazeId }: NavbarProps) {
 
   return (
     <>
-    <header style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 24px',
-      background: 'var(--bg-dark)',
-      borderBottom: '1px solid var(--border)',
-      height: 60,
-      flexShrink: 0,
-      zIndex: 100,
-    }}>
+    <header className="nav-header">
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -124,33 +115,27 @@ export default function Navbar({ mazeId }: NavbarProps) {
           style={{ borderRadius: 4 }}
           priority
         />
-        <span style={{
-          fontFamily: 'var(--font-head)',
-          fontWeight: 700,
-          fontSize: 20,
-          letterSpacing: '0.08em',
-          color: 'var(--text)',
-        }}>HAM</span>
+        <span className="nav-logo-text">HAM</span>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+      <div className="nav-stats">
         {[
           { label: 'POT SIZE', value: `${prizePool.toFixed(2)} STX` },
           { label: 'MINT FEE', value: `${mintFee} STX` },
         ].map(({ label, value }, i) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
-            {i > 0 && <div style={{ width: 1, height: 28, background: 'var(--border)' }} />}
+          <div key={label} className="nav-stat-item">
+            {i > 0 && <div className="nav-stat-divider" style={{ width: 1, height: 28, background: 'var(--border)' }} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{label}</span>
-              <span style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{value}</span>
+              <span className="nav-stat-label" style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{label}</span>
+              <span className="nav-stat-value" style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{value}</span>
             </div>
           </div>
         ))}
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="nav-actions">
         <button
           onClick={() => {
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -166,28 +151,15 @@ export default function Navbar({ mazeId }: NavbarProps) {
           }}
           title="Toggle Theme"
         >
-          🌓
+          <Moon size={20} style={{ color: 'var(--text-muted)', display: 'block' }} />
         </button>
 
         <div style={{ position: 'relative' }}>
           {address ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {isBoosted && (
-                <div style={{
-                  background: 'rgba(255, 215, 0, 0.15)',
-                  border: '1px solid rgba(255, 215, 0, 0.3)',
-                  color: 'var(--gold)',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  whiteSpace: 'nowrap',
-                }} title="Your run time is boosted by your NFT!">
-                  🚀 {boosterMultiplier}% BOOSTED
+                <div className="nav-booster" title="Your run time is boosted by your NFT!" style={{ display: 'flex', alignItems: 'center' }}>
+                  <Rocket size={14} style={{ marginRight: 6 }} /> {boosterMultiplier}% BOOSTED
                 </div>
               )}
               <button

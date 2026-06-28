@@ -8,6 +8,7 @@ import { STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 import { uintCV, listCV, principalCV, bufferCV, fetchCallReadOnlyFunction, cvToJSON } from '@stacks/transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Save, Link as LinkIcon, Settings, Wallet, Zap, Rocket, Gift, RefreshCw, ArrowLeft } from 'lucide-react';
 
 // Pre-load @stacks/connect to avoid losing user-gesture token during dynamic import
 let stacksConnectAPI: any = null;
@@ -156,8 +157,8 @@ export default function AdminPage() {
         zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', marginRight: 10 }} title="Back to Game">
-            ←
+          <button onClick={() => router.push('/')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', marginRight: 10, display: 'flex', alignItems: 'center' }} title="Back to Game">
+            <ArrowLeft size={24} />
           </button>
           <img src="/logo.jpg" alt="HAM" width={32} height={32} style={{ borderRadius: 4 }} />
           <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 20, letterSpacing: '0.08em', color: 'var(--text)' }}>
@@ -166,8 +167,8 @@ export default function AdminPage() {
         </div>
         <div>
           {address && (
-            <button className="wallet-btn" onClick={connectWallet} title="Fixes Leather wallet 'not authorized' error">
-              🔄 Re-Authenticate
+            <button className="wallet-btn" onClick={connectWallet} title="Fixes Leather wallet 'not authorized' error" style={{ display: 'flex', alignItems: 'center' }}>
+              <RefreshCw size={14} style={{ marginRight: 6 }} /> Re-Authenticate
             </button>
           )}
         </div>
@@ -213,8 +214,8 @@ export default function AdminPage() {
               <input type="text" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} style={{ padding: '10px 12px', background: 'var(--bg-dark)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-mono)' }} />
             </label>
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-              <button onClick={handleSaveCampaign} className="btn btn-primary" style={{ flex: 1, padding: 12 }}>
-                💾 Save Database
+              <button onClick={handleSaveCampaign} className="btn btn-primary" style={{ flex: 1, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Save size={16} style={{ marginRight: 6 }} /> Save Database
               </button>
               <button onClick={async () => {
                 if (!address) return alert("Connect wallet");
@@ -242,8 +243,8 @@ export default function AdminPage() {
                     }
                   });
                 } catch (e: any) { setStatus("Error: " + e.message); }
-              }} className="btn btn-secondary" style={{ flex: 1, padding: 12, border: '1px solid var(--accent)', color: 'var(--accent)' }}>
-                🔗 Commit On-Chain
+              }} className="btn btn-secondary" style={{ flex: 1, padding: 12, border: '1px solid var(--accent)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LinkIcon size={16} style={{ marginRight: 6 }} /> Commit On-Chain
               </button>
             </div>
           </div>
@@ -285,8 +286,8 @@ export default function AdminPage() {
                 }
               });
             } catch (e: any) { setStatus("Error: " + e.message); }
-          }} className="btn btn-secondary" style={{ padding: 12, border: '1px solid var(--goal)', color: 'var(--goal)', marginBottom: 24 }}>
-            ⚙️ Update Mint Fee
+          }} className="btn btn-secondary" style={{ padding: 12, border: '1px solid var(--goal)', color: 'var(--goal)', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Settings size={16} style={{ marginRight: 6 }} /> Update Mint Fee
           </button>
 
           <div style={{ height: 1, background: 'var(--border)', margin: '0 0 24px 0' }} />
@@ -326,8 +327,8 @@ export default function AdminPage() {
                 }
               });
             } catch (e: any) { setStatus("Error: " + e.message); }
-          }} className="btn btn-secondary" style={{ padding: 12, border: '1px solid var(--gold)', color: 'var(--gold)' }}>
-            💰 Claim Admin Fees
+          }} className="btn btn-secondary" style={{ padding: 12, border: '1px solid var(--gold)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Wallet size={16} style={{ marginRight: 6 }} /> Claim Admin Fees
           </button>
         </div>
 
@@ -347,8 +348,8 @@ export default function AdminPage() {
 
           {!settlementPreview ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              <button onClick={handleFetchWinners} className="btn btn-secondary" style={{ flex: '1 1 120px', padding: 12, border: '1px solid var(--accent)', color: 'var(--accent)' }}>
-                ⚡ Fetch Winners
+              <button onClick={handleFetchWinners} className="btn btn-secondary" style={{ flex: '1 1 120px', padding: 12, border: '1px solid var(--accent)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={16} style={{ marginRight: 6 }} /> Fetch Winners
               </button>
             </div>
           ) : (
@@ -362,8 +363,8 @@ export default function AdminPage() {
                 ))}
               </ul>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={executeSettle} className="btn btn-primary" style={{ flex: 1, padding: 10 }}>
-                  🚀 Sign & Broadcast
+                <button onClick={executeSettle} className="btn btn-primary" style={{ flex: 1, padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Rocket size={16} style={{ marginRight: 6 }} /> Sign & Broadcast
                 </button>
                 <button onClick={() => setSettlementPreview(null)} className="btn btn-secondary" style={{ padding: 10 }}>
                   Cancel
@@ -416,8 +417,8 @@ export default function AdminPage() {
                 }
               });
             } catch (e: any) { setStatus("Error: " + e.message); }
-          }} className="btn btn-primary" style={{ padding: 12 }}>
-            🎁 Sponsor Pot
+          }} className="btn btn-primary" style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Gift size={16} style={{ marginRight: 6 }} /> Sponsor Pot
           </button>
         </div>
 

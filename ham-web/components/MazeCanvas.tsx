@@ -336,8 +336,12 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
 
       if (stateRef.current !== 'playing') return;
 
+      // Increase tolerance for touch screens (fat finger compensation)
+      const isTouch = e.pointerType === 'touch';
+      const activeTolerance = isTouch ? TOLERANCE * 2.5 : TOLERANCE;
+
       // Wall collision check
-      if (hitTestWalls(pos.x, pos.y, wallsRef.current, TOLERANCE)) {
+      if (hitTestWalls(pos.x, pos.y, wallsRef.current, activeTolerance)) {
         stateRef.current = 'failed';
         setGameState('failed');
         stopTimer();
@@ -374,6 +378,20 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
     []
   );
 
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      // If they lift their finger/mouse while playing, they fail! (Prevents teleporting)
+      if (stateRef.current === 'playing') {
+        stateRef.current = 'failed';
+        setGameState('failed');
+        stopTimer();
+        drawAll();
+        setTimeout(resetRun, 400);
+      }
+    },
+    [drawAll, resetRun, stopTimer]
+  );
+
   // ── Format time ─────────────────────────────────────────────────
 
   const formatTime = (ms: number) => {
@@ -400,6 +418,9 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
           style={{ display: 'block', width: '100%', height: '100%', touchAction: 'none' }}
           onPointerMove={handlePointerMove}
           onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         />
       </div>
 

@@ -295,6 +295,15 @@ html, body {
 }
 .btn-dark:hover { background: #2d2d4e; }
 
+.sq-btn {
+  transition: all 0.2s ease;
+}
+.sq-btn:hover {
+  background: rgba(255,255,255,0.1) !important;
+  color: var(--text) !important;
+  transform: translateY(-1px);
+}
+
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
 .btn-full { width: 100%; }
@@ -447,3 +456,123 @@ html, body {
   .result-time { font-size: 40px; }
   .game-center { padding: 20px 10px; }
 }
+
+/* Navbar Mobile Fixes */
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border);
+  height: 60px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.nav-stats {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+.nav-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-logo-text {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+.nav-booster {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: var(--gold);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .nav-header {
+    padding: 0 12px;
+  }
+  .nav-stats {
+    gap: 16px;
+  }
+  .nav-stat-item {
+    gap: 16px;
+  }
+  .nav-stat-divider {
+    display: none;
+  }
+  .nav-stat-label {
+    font-size: 8px !important;
+  }
+  .nav-stat-value {
+    font-size: 12px !important;
+  }
+  .nav-actions {
+    gap: 8px;
+  }
+  .nav-booster {
+    display: none !important;
+  }
+  .nav-logo-text {
+    display: none !important;
+  }
+  .wallet-btn {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Leaderboard Mobile Fixes */
+.lb-header {
+  display: grid;
+  grid-template-columns: 20px minmax(0,1fr) 50px 65px 10px;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 6px 4px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.lb-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0,1fr) 50px 65px 10px;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  transition: background 0.2s;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row:hover { background: var(--bg-dark); }
+.lb-row.me    { background: var(--bg-dark); border-left: 2px solid var(--accent); }
+
+@media (max-width: 768px) {
+  .lb-addr {
+    font-size: 11px;
+  }
+}
+
