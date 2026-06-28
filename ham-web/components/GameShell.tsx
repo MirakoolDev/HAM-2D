@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import dynamicImport from 'next/dynamic';
 import Leaderboard from '@/components/Leaderboard';
 import Navbar from '@/components/Navbar';
-import MazeSelector from './MazeSelector';
 import ResultCard from '@/components/ResultCard';
 import { getTodaySeed, addDaysToSeed } from '@/lib/maze';
 import { useGameChain } from '@/components/GameProvider';

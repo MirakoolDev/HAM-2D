@@ -24,7 +24,7 @@ export const userSession = new Proxy({}, {
   }
 }) as UserSessionType;
 
-import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV, Pc } from '@stacks/transactions';
+import { uintCV, stringAsciiCV, fetchCallReadOnlyFunction, cvToValue, listCV, principalCV, bufferCV, Pc, PostConditionMode } from '@stacks/transactions';
 import { IBlockchainProvider, RunData } from './interface';
 import { STACKS_MOCKNET, STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
 
@@ -183,7 +183,7 @@ export class StacksGameService implements IBlockchainProvider {
             stringAsciiCV(data.ipfsUri),
             bufferCV(new Uint8Array(data.signature.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
-          postConditionMode: 0, // PostConditionMode.Deny (0) - strict post-conditions
+          postConditionMode: PostConditionMode.Deny, // strict post-conditions
           postConditions: [postCondition],
           fee: 10000, // Hardcode fee to avoid FeeTooLow error on large SVG payloads
           userSession, // Pass explicit userSession to avoid unauthorized errors
