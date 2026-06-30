@@ -235,7 +235,10 @@ export class StacksGameService implements IBlockchainProvider {
             listCV(winnerPrincipals),
             bufferCV(new Uint8Array(signatureHex.match(/.{1,2}/g).map((b: string) => parseInt(b, 16))))
           ],
-          postConditionMode: 1, // Allow contract to transfer STX
+          postConditionMode: PostConditionMode.Deny,
+          postConditions: [
+            Pc.principal(`${CONTRACT_ADDRESS}.${CONTRACT_NAME}`).willSendGte(0).ustx()
+          ],
           userSession,
           onFinish: (data: any) => {
             console.log("Settle transaction broadcasted", data);

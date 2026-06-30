@@ -83,7 +83,7 @@ export default function WelcomeModal({ isOpen, onClose, address, profileName, on
           {!address ? (
             <div style={{ textAlign: 'left', marginBottom: '24px', padding: '0 10px' }}>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5', fontFamily: 'var(--font-head)', textAlign: 'center' }}>
-                The first fully on-chain daily maze. Here's how it works:
+                A highly competitive, on-chain daily maze. Here's how it works:
               </p>
               <ul style={{ fontSize: '12px', color: 'var(--text)', lineHeight: '1.6', listStyle: 'none', padding: 0, margin: '0', display: 'flex', flexDirection: 'column', gap: '12px', fontFamily: 'var(--font-head)' }}>
                 <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>

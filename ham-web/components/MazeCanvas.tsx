@@ -22,12 +22,12 @@ const TOLERANCE = 4;         // wall collision tolerance in px default 4
 
 // ─── Types ────────────────────────────────────────────────────────
 
-export type GameState = 'idle' | 'playing' | 'failed' | 'success';
+export type GameState = 'idle' | 'playing' | 'paused' | 'failed' | 'success';
 
 interface MazeCanvasProps {
   mazeId: number;
   isViewOnly?: boolean;
-  onSuccess: (timeMs: number, pathSvg: string, snapshot: string) => void;
+  onSuccess: (timeMs: number, pathSvg: string, snapshot: string, attempts: number) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────
@@ -44,6 +44,10 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
   const cellPxRef = useRef<number>(40);
   const offsetRef = useRef({ x: 0, y: 0 });
   const goalPixelRef = useRef({ x: 0, y: 0, size: 0 });
+  const pauseTimeRef = useRef<number>(0);
+  const penaltyMsRef = useRef<number>(0);
+  const lastPosRef = useRef<Point | null>(null);
+  const attemptsRef = useRef<number>(1);
 
   const [gameState, setGameState] = useState<GameState>('idle');
   const [elapsed, setElapsed] = useState(0);
@@ -125,8 +129,8 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      if (stateRef.current === 'playing') {
-        // Fading trail while playing
+      if (stateRef.current === 'playing' || stateRef.current === 'paused') {
+        // Fading trail while playing/paused
         const trailPoints = 40; // Length of the comet tail
         const startIdx = Math.max(0, pathRef.current.length - trailPoints);
         const totalTrail = pathRef.current.length - 1 - startIdx;
@@ -159,7 +163,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
     }
 
     // Fog of War
-    if (stateRef.current === 'playing' || stateRef.current === 'idle') {
+    if (stateRef.current === 'playing' || stateRef.current === 'paused' || stateRef.current === 'idle') {
       const fCanvas = fogCanvasRef.current;
       if (fCanvas) {
         const fCtx = fCanvas.getContext('2d')!;
@@ -169,7 +173,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
 
         let lightX = cellPx / 2;
         let lightY = cellPx / 2;
-        if (stateRef.current === 'playing' && pathRef.current.length > 0) {
+        if ((stateRef.current === 'playing' || stateRef.current === 'paused') && pathRef.current.length > 0) {
           const last = pathRef.current[pathRef.current.length - 1];
           lightX = last.x;
           lightY = last.y;
@@ -275,7 +279,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
   const startTimer = useCallback(() => {
     startTimeRef.current = performance.now();
     timerRef.current = setInterval(() => {
-      setElapsed(performance.now() - startTimeRef.current);
+      setElapsed(performance.now() - startTimeRef.current + penaltyMsRef.current);
     }, 50);
   }, []);
 
@@ -289,6 +293,9 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
     pathRef.current = [];
     stopTimer();
     setElapsed(0);
+    penaltyMsRef.current = 0;
+    lastPosRef.current = null;
+    attemptsRef.current += 1;
     stateRef.current = 'idle';
     setGameState('idle');
     drawAll();
@@ -334,6 +341,27 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         }
       }
 
+      if (stateRef.current === 'paused') {
+        if (!lastPosRef.current) return;
+        const dist = Math.sqrt((pos.x - lastPosRef.current.x) ** 2 + (pos.y - lastPosRef.current.y) ** 2);
+        
+        // They must resume within a small radius of where they lifted to prevent teleporting
+        if (dist > TOLERANCE * 5) {
+          stateRef.current = 'failed';
+          setGameState('failed');
+          stopTimer();
+          drawAll();
+          setTimeout(resetRun, 400);
+          return;
+        } else {
+          // Resume successfully, apply double time penalty
+          const pauseDuration = performance.now() - pauseTimeRef.current;
+          penaltyMsRef.current += pauseDuration * 2;
+          stateRef.current = 'playing';
+          setGameState('playing');
+        }
+      }
+
       if (stateRef.current !== 'playing') return;
 
       // Increase tolerance for touch screens (fat finger compensation)
@@ -357,12 +385,13 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
         stateRef.current = 'success';
         setGameState('success');
         stopTimer();
-        const timeMs = Math.round(performance.now() - startTimeRef.current);
+        const timeMs = Math.round(performance.now() - startTimeRef.current + penaltyMsRef.current);
+        const attempts = attemptsRef.current;
         const canvas = canvasRef.current!;
         drawAll();
         const snapshot = canvas.toDataURL('image/png');
-        const svg = pathToSVG(pathRef.current, canvas.width, canvas.height);
-        onSuccess(timeMs, svg, snapshot);
+        const svg = pathToSVG(pathRef.current, canvas.width, canvas.height, mazeId, timeMs, attempts);
+        onSuccess(timeMs, svg, snapshot, attempts);
         return;
       }
 
@@ -380,16 +409,18 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
-      // If they lift their finger/mouse while playing, they fail! (Prevents teleporting)
+      // Instead of failing immediately, we pause the game. 
+      // A penalty will be applied when they resume.
       if (stateRef.current === 'playing') {
-        stateRef.current = 'failed';
-        setGameState('failed');
-        stopTimer();
-        drawAll();
-        setTimeout(resetRun, 400);
+        stateRef.current = 'paused';
+        setGameState('paused');
+        pauseTimeRef.current = performance.now();
+        if (pathRef.current.length > 0) {
+          lastPosRef.current = pathRef.current[pathRef.current.length - 1];
+        }
       }
     },
-    [drawAll, resetRun, stopTimer]
+    []
   );
 
   // ── Format time ─────────────────────────────────────────────────
@@ -427,7 +458,7 @@ export default function MazeCanvas({ mazeId, isViewOnly, onSuccess }: MazeCanvas
       <div className="status-bar">
         <span className="live-dot" />
         {gameState === 'idle' && (isViewOnly ? 'Viewing past maze' : 'Move cursor to start')}
-        {gameState === 'playing' && 'Find the ★'}
+        {(gameState === 'playing' || gameState === 'paused') && 'Find the ★'}
         {gameState === 'failed' && '💥 Hit a wall — resetting…'}
         {gameState === 'success' && '★ Solved!'}
         <span style={{ marginLeft: 'auto', fontSize: 11 }}>

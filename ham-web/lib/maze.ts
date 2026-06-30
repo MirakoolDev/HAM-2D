@@ -234,7 +234,10 @@ export function hitTestWalls(
 export function pathToSVG(
   points: Point[],
   canvasW: number,
-  canvasH: number
+  canvasH: number,
+  mazeId: number = 0,
+  timeMs: number = 0,
+  attempts: number = 1
 ): string {
   if (points.length < 2) return '';
   const scale = (n: number, max: number) => ((n / max) * 100).toFixed(2);
@@ -244,7 +247,36 @@ export function pathToSVG(
         `${i === 0 ? 'M' : 'L'} ${scale(p.x, canvasW)} ${scale(p.y, canvasH)}`
     )
     .join(' ');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${d}" stroke="#ff7b00" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  // Generate random hue based on mazeId (since mazeId is YYYYMMDD, it changes daily)
+  const hueBg = (mazeId * 137) % 360;
+  const huePath = (mazeId * 27) % 360;
+  
+  const timeStr = (timeMs / 1000).toFixed(2) + 's';
+  // Format mazeId (YYYYMMDD) to M/D/YYYY
+  const year = Math.floor(mazeId / 10000);
+  const month = Math.floor((mazeId % 10000) / 100);
+  const day = mazeId % 100;
+  const dateStr = `${month}/${day}/${year}`;
+  
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="hsl(${hueBg}, 30%, 15%)" />
+        <stop offset="100%" stop-color="hsl(${(hueBg + 40) % 360}, 40%, 10%)" />
+      </linearGradient>
+      <linearGradient id="path" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="hsl(${huePath}, 80%, 60%)" />
+        <stop offset="100%" stop-color="hsl(${(huePath + 40) % 360}, 80%, 60%)" />
+      </linearGradient>
+    </defs>
+    <rect width="100" height="100" fill="url(#bg)" />
+    <path d="${d}" stroke="url(#path)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="drop-shadow(0px 0px 2px rgba(255,255,255,0.2))" />
+    <text x="4" y="8" fill="rgba(255,255,255,0.6)" font-family="monospace" font-size="4" font-weight="bold">${dateStr}</text>
+    <text x="4" y="14" fill="#ffffff" font-family="monospace" font-size="5" font-weight="bold">TIME: ${timeStr}</text>
+    <text x="4" y="20" fill="rgba(255,255,255,0.7)" font-family="monospace" font-size="4">ATTEMPTS: ${attempts}</text>
+    <text x="96" y="96" fill="rgba(255,255,255,0.2)" font-family="monospace" font-size="4" text-anchor="end">HAM v2</text>
+  </svg>`.replace(/\n\s*/g, '');
 }
 
 // ─── Goal Cell ────────────────────────────────────────────────────────────────
