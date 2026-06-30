@@ -99,6 +99,9 @@ export default function WelcomeModal({ isOpen, onClose, address, profileName, on
                   <span><strong>Win the Pot:</strong> <span style={{ color: 'var(--text-muted)' }}>The top 10 fastest players each day split the prize pool!</span></span>
                 </li>
               </ul>
+              <div style={{ marginTop: '16px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-head)', textAlign: 'center' }}>
+                <strong>💡 Pro Tip:</strong> For the most precise control, we highly recommend playing on a desktop with a mouse.
+              </div>
             </div>
           ) : (
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: '1.5', fontFamily: 'var(--font-head)' }}>

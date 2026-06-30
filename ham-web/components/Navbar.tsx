@@ -77,13 +77,33 @@ export default function Navbar({ mazeId }: NavbarProps) {
     async function fetchStats() {
       try {
         const pool = await provider.getPrizePool(mazeId);
-        setPrizePool(parseInt(pool) / 1_000_000);
+        let finalPrizePool = parseInt(pool) / 1_000_000;
+        
         const fee = await provider.getMintFee?.() || "1000000";
-        setMintFee(parseInt(fee) / 1_000_000);
+        const finalMintFee = parseInt(fee) / 1_000_000;
+        
+        setMintFee(finalMintFee);
+        
         if (isPastMaze) {
           const settled = await provider.isMazeSettled(mazeId);
           setIsSettled(settled);
+          
+          if (settled && finalPrizePool === 0) {
+            try {
+              const res = await fetch(`/api/leaderboard?mazeId=${mazeId}&network=${networkId}`);
+              const data = await res.json();
+              if (data && data.leaderboard && Array.isArray(data.leaderboard)) {
+                // Sum up every single run from all players' histories
+                const totalRuns = data.leaderboard.reduce((acc: number, curr: any) => acc + (curr.history ? curr.history.length : 1), 0);
+                finalPrizePool = totalRuns * finalMintFee;
+              }
+            } catch (e) {
+              console.error("Failed to fetch historical runs", e);
+            }
+          }
         }
+        
+        setPrizePool(finalPrizePool);
       } catch (err) {
         console.error("Failed to fetch stats", err);
       }

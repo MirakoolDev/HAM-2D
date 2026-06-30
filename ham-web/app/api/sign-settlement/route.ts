@@ -21,9 +21,6 @@ export async function POST(req: NextRequest) {
     // }
 
     const runs = await fetchLeaderboard(mazeId, network);
-    if (runs.length === 0) {
-      return NextResponse.json({ error: 'No runs found for this maze' }, { status: 400 });
-    }
 
     const campaign = await fetchCampaign(mazeId, network);
     const isTestnet = network === 'testnet';

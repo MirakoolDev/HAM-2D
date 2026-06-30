@@ -5,7 +5,7 @@ import { useGameChain } from '@/components/GameProvider';
 import { network, userSession } from '@/lib/blockchain/stacks-provider';
 import { getTodaySeed } from '@/lib/maze';
 import { STACKS_TESTNET, STACKS_MAINNET } from '@stacks/network';
-import { uintCV, listCV, principalCV, bufferCV, fetchCallReadOnlyFunction, cvToJSON } from '@stacks/transactions';
+import { uintCV, listCV, principalCV, bufferCV, fetchCallReadOnlyFunction, cvToJSON, Pc, PostConditionMode } from '@stacks/transactions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Save, Link as LinkIcon, Settings, Wallet, Zap, Rocket, Gift, RefreshCw, ArrowLeft } from 'lucide-react';
@@ -310,12 +310,16 @@ export default function AdminPage() {
               if (amountMicro <= 0) return alert("Enter valid amount");
               if (!stacksConnectAPI) throw new Error("Wallet API not loaded yet.");
               
+              const contractAddr = process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ";
+              const contractName = process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4";
+              
               await stacksConnectAPI.openContractCall({
                 network,
-                contractAddress: process.env.NEXT_PUBLIC_STACKS_CONTRACT_ADDRESS || "SP1K96254R3KP5TRT5N2X64FB12VMHX6MYS0BQGYQ",
-                contractName: process.env.NEXT_PUBLIC_STACKS_CONTRACT_NAME || "ham-maze-v4",
+                contractAddress: contractAddr,
+                contractName: contractName,
                 functionName: "claim-admin-fees",
                 functionArgs: [uintCV(amountMicro)],
+                postConditionMode: PostConditionMode.Allow,
                 userSession,
                 onFinish: (d: any) => {
                   const chainQuery = networkId.includes('testnet') ? 'testnet' : 'mainnet';
